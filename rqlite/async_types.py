@@ -1,4 +1,5 @@
 """Async type definitions and helpers for rqlite DB-API 2.0 compliance."""
+from __future__ import annotations
 
 import asyncio
 from typing import Protocol, runtime_checkable

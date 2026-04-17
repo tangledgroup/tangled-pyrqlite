@@ -20,18 +20,19 @@ Usage:
     uv run python -B examples/async_basic_usage.py --with-lock
 """
 
-import argparse
-import functools
-from typing import Any, Callable
-from collections.abc import Callable as _Callable
+from __future__ import annotations
 
+import argparse
 import asyncio
+import functools
+from collections.abc import Callable
+from typing import Any
 
 import rqlite
 from rqlite import AioLock
 
 
-def print_docstring(func: _Callable) -> _Callable:
+def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
     @functools.wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -391,7 +392,7 @@ Examples:
     use_lock = args.with_lock
 
     print("=" * 60)
-    print(f"Async DB-API 2.0 Examples for rqlite")
+    print("Async DB-API 2.0 Examples for rqlite")
     if use_lock:
         print("(WITH LOCK - no warnings)")
     else:

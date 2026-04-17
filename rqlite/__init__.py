@@ -8,16 +8,16 @@ This package provides:
 
 Note on Transaction Warnings:
     When using this library **without a lock**, you will receive a `UserWarning`:
-    
+
         UserWarning: Explicit BEGIN/COMMIT/ROLLBACK/SAVEPOINT SQL is not supported.
-    
+
     This warning is **expected behavior** and is fine if you understand rqlite's
     transaction model (queue-based, atomic batch). To suppress this warning and
     indicate intentional handling of transaction limitations, provide a lock:
-    
+
         >>> from rqlite import ThreadLock
         >>> conn = rqlite.connect(lock=ThreadLock())
-    
+
     For true ACID compliance with proper isolation guarantees, it is recommended
     to use a lock (e.g., `ThreadLock()` for sync, `AioLock()` for async).
 

@@ -10,19 +10,14 @@ import warnings
 
 import pytest
 from sqlalchemy import (
-    Column,
-    Integer,
-    String,
     create_engine,
-    delete,
     insert,
     select,
     text,
     update,
 )
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-import rqlite
 from rqlite.types import ThreadLock
 
 
@@ -35,10 +30,10 @@ class TestUser(Base):
 
     __tablename__ = "sa_lock_users"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True)
-    age = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str | None] = mapped_column(unique=True)
+    age: Mapped[int | None] = mapped_column()
 
 
 class TestProduct(Base):
@@ -46,10 +41,10 @@ class TestProduct(Base):
 
     __tablename__ = "sa_lock_products"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    price = Column(Integer)  # cents
-    quantity = Column(Integer, default=0)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    price: Mapped[int] = mapped_column()  # cents
+    quantity: Mapped[int] = mapped_column(default=0)
 
 
 # Fixtures for engines with and without locks
@@ -95,7 +90,7 @@ def tables_without_lock(engine_without_lock):
         conn.execute(text("DROP TABLE IF EXISTS sa_lock_users"))
         conn.execute(text("DROP TABLE IF EXISTS sa_lock_products"))
         conn.commit()
-    
+
     Base.metadata.create_all(engine_without_lock)
     yield
     Base.metadata.drop_all(engine_without_lock)
@@ -109,7 +104,7 @@ def tables_with_lock(engine_with_threadlock):
         conn.execute(text("DROP TABLE IF EXISTS sa_lock_users"))
         conn.execute(text("DROP TABLE IF EXISTS sa_lock_products"))
         conn.commit()
-    
+
     Base.metadata.create_all(engine_with_threadlock)
     yield
     Base.metadata.drop_all(engine_with_threadlock)
@@ -165,7 +160,7 @@ class TestSQLAlchemyCoreWithoutLock:
 
     def test_delete(self, engine_without_lock, tables_without_lock):
         """Test DELETE without lock."""
-        from sqlalchemy import delete
+        from sqlalchemy import delete as delete_stmt
 
         with engine_without_lock.connect() as conn:
             # Insert
@@ -174,7 +169,7 @@ class TestSQLAlchemyCoreWithoutLock:
             conn.commit()
 
             # Delete
-            stmt = delete(TestUser).where(TestUser.name == "Charlie")
+            stmt = delete_stmt(TestUser).where(TestUser.name == "Charlie")
             conn.execute(stmt)
             conn.commit()
 
@@ -234,7 +229,7 @@ class TestSQLAlchemyCoreWithLock:
 
     def test_delete_with_threadlock(self, engine_with_threadlock, tables_with_lock):
         """Test DELETE with ThreadLock."""
-        from sqlalchemy import delete
+        from sqlalchemy import delete as delete_stmt
 
         with engine_with_threadlock.connect() as conn:
             # Insert
@@ -243,7 +238,7 @@ class TestSQLAlchemyCoreWithLock:
             conn.commit()
 
             # Delete
-            stmt = delete(TestUser).where(TestUser.name == "Frank")
+            stmt = delete_stmt(TestUser).where(TestUser.name == "Frank")
             conn.execute(stmt)
             conn.commit()
 

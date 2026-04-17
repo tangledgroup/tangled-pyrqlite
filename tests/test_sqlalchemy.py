@@ -3,15 +3,11 @@
 
 import pytest
 from sqlalchemy import (
-    Column,
-    Float,
-    Integer,
-    String,
     create_engine,
     select,
     text,
 )
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 import rqlite
 
@@ -25,10 +21,10 @@ class User(Base):
 
     __tablename__ = "sa_users"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True)
-    age = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str | None] = mapped_column(unique=True)
+    age: Mapped[int | None] = mapped_column()
 
 
 class Product(Base):
@@ -36,10 +32,10 @@ class Product(Base):
 
     __tablename__ = "sa_products"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    price = Column(Integer)  # Store as cents
-    quantity = Column(Integer, default=0)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    price: Mapped[int] = mapped_column()  # Store as cents
+    quantity: Mapped[int] = mapped_column(default=0)
 
 
 @pytest.fixture(scope="function")
@@ -177,9 +173,9 @@ class TestSQLAlchemyORM:
         class Order(Base):
             __tablename__ = "sa_orders"
 
-            id = Column(Integer, primary_key=True)
-            user_id = Column(Integer)
-            product = Column(String)
+            id: Mapped[int] = mapped_column(primary_key=True)
+            user_id: Mapped[int | None] = mapped_column()
+            product: Mapped[str | None] = mapped_column()
 
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)

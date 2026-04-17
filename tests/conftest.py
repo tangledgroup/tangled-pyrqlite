@@ -58,14 +58,14 @@ TEST_TABLES = [
 @pytest.fixture(scope="function", autouse=True)
 def cleanup_tables():
     """Automatically cleanup all test tables after each test.
-    
+
     This fixture runs automatically after every test to ensure
     a clean database state and prevent test interference.
     Uses ThreadLock to suppress transaction warnings.
     """
     # Yield first to allow the test to run
     yield
-    
+
     # Cleanup happens AFTER the test runs (teardown phase)
     conn = rqlite.connect(host="localhost", port=4001, lock=rqlite.ThreadLock())
     try:

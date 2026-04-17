@@ -19,6 +19,7 @@ Note on Transaction Warnings:
     For true ACID compliance with proper isolation guarantees, it is recommended
     to use a lock.
 """
+from __future__ import annotations
 
 import warnings
 from collections.abc import Iterator

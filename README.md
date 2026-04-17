@@ -1,4 +1,8 @@
-# rqlite - python client
+# tangled-pyrqlite - python client
+
+[![Downloads](https://img.shields.io/pypi/dm/tangled-pyrqlite)](https://pypistats.org/packages/tangled-pyrqlite)
+[![Supported Versions](https://img.shields.io/pypi/pyversions/tangled-pyrqlite)](https://pypi.org/project/tangled-pyrqlite)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 A pure Python client for [rqlite](https://rqlite.io/) distributed SQLite clusters, providing:
 
@@ -11,10 +15,10 @@ A pure Python client for [rqlite](https://rqlite.io/) distributed SQLite cluster
 
 ```bash
 # Using uv (recommended)
-uv add rqlite
+uv add tangled-pyrqlite
 
 # Using pip
-pip install rqlite
+pip install tangled-pyrqlite
 ```
 
 ## Quick Start
@@ -123,8 +127,8 @@ cursor.execute(
 ### SQLAlchemy Usage
 
 ```python
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy import Integer, String, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from rqlite import ReadConsistency, ThreadLock
 
 
@@ -135,9 +139,9 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str | None] = mapped_column(unique=True)
 
 
 # Basic engine (uses LINEARIZABLE consistency by default)
@@ -155,7 +159,8 @@ engine = create_engine(
 # Or use URL query parameter for read_consistency only
 engine = create_engine("rqlite://localhost:4001?read_consistency=weak")
 
-# Create tables
+# Create tables (echo=True shows SQL)
+engine = create_engine("rqlite://localhost:4001", echo=True)
 Base.metadata.create_all(engine)
 
 # Use with Session

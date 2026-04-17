@@ -20,10 +20,12 @@ Usage:
     uv run python -B examples/basic_usage.py --with-lock
 """
 
+from __future__ import annotations
+
 import argparse
 import functools
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
 import rqlite
 from rqlite import ThreadLock

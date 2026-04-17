@@ -4,8 +4,6 @@
 import threading
 import warnings
 
-import pytest
-
 import rqlite
 from rqlite.types import LockProtocol, ThreadLock
 
@@ -122,7 +120,7 @@ class TestLockSuppressesWarnings:
             warnings.simplefilter("always")
             # rqlite v9 ignores BEGIN without raising an error
             cursor.execute("BEGIN")
-            
+
             # Should have warned about unsupported SQL
             transaction_warnings = [
                 x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
@@ -146,7 +144,7 @@ class TestLockSuppressesWarnings:
                 warnings.simplefilter("always")
                 # BEGIN is skipped by our client when lock is provided
                 cursor.execute("BEGIN")
-                
+
                 # Check that no warning was raised about unsupported SQL
                 transaction_warnings = [
                     x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
@@ -181,7 +179,7 @@ class TestLockSuppressesWarnings:
                 warnings.simplefilter("always")
                 # COMMIT is skipped by our client when lock is provided
                 cursor.execute("COMMIT")
-                
+
                 # Check that no warning was raised about unsupported SQL
                 transaction_warnings = [
                     x for x in w if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
@@ -464,7 +462,7 @@ class TestLockIntegration:
             assert row[0] == 3
 
             cursor.execute("SELECT * FROM full_lock_workflow ORDER BY value")
-            rows = cursor.fetchall()
+            cursor.fetchall()
 
             # UPDATE
             cursor.execute("UPDATE full_lock_workflow SET value = ? WHERE name = ?", (10, "B"))

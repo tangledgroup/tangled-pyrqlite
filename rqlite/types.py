@@ -1,4 +1,5 @@
 """Type definitions and helpers for rqlite DB-API 2.0 compliance."""
+from __future__ import annotations
 
 import datetime
 import threading

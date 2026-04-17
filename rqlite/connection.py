@@ -2,22 +2,23 @@
 
 Note on Transaction Warnings:
     When creating a Connection **without a lock**, a `UserWarning` is issued:
-    
+
         UserWarning: Explicit BEGIN/COMMIT/ROLLBACK/SAVEPOINT SQL is not supported.
-    
+
     This warning indicates that explicit transaction SQL commands are not supported
     in rqlite's traditional sense. This is **expected behavior** and is fine if you
     understand rqlite's queue-based transaction model.
-    
+
     To suppress this warning and indicate intentional handling of transaction
     limitations, provide a lock when connecting:
-    
+
         >>> from rqlite import ThreadLock
         >>> conn = connect(lock=ThreadLock())
-    
+
     For true ACID compliance with proper isolation guarantees, it is recommended
     to use a lock.
 """
+from __future__ import annotations
 
 import warnings
 from typing import TYPE_CHECKING, Any, Literal

@@ -19,15 +19,16 @@ Usage:
     uv run python -B examples/sqlalchemy_orm.py --with-lock
 """
 
+from __future__ import annotations
+
 import argparse
 import functools
 from collections.abc import Callable
 from typing import Any
 
-from sqlalchemy import Column, Integer, String, create_engine, text
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-import rqlite
 from rqlite import ThreadLock
 
 
@@ -52,10 +53,10 @@ class User(Base):
 
     __tablename__ = "orm_users"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False)
-    age = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    age: Mapped[int | None] = mapped_column()
 
 
 @print_docstring
