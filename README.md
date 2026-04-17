@@ -1,4 +1,4 @@
-# rqlite - Python DB-API 2.0 Client and SQLAlchemy Dialect
+# rqlite - python client
 
 A pure Python client for [rqlite](https://rqlite.io/) distributed SQLite clusters, providing:
 
