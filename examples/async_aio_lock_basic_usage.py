@@ -1,3 +1,4 @@
+# ty: ignore[unresolved-attribute]
 """Async AioLock DB-API 2.0 examples for rqlite.
 
 This module demonstrates how to use the async AioLock client for rqlite.
@@ -34,6 +35,7 @@ from rqlite import AioLock
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
+
     @functools.wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
@@ -116,6 +118,7 @@ async def query_data(use_lock: bool = False) -> None:
     print("\nUser named Alice:")
     await cursor.execute("SELECT * FROM async_users WHERE name=?", ("Alice",))
     row = cursor.fetchone()
+    assert row is not None
     if row:
         print(f"  Found: {row}")
 
@@ -192,7 +195,11 @@ async def context_manager_example(use_lock: bool = False) -> None:
     async with conn:
         async with await conn.cursor() as cursor:
             await cursor.execute("SELECT COUNT(*) FROM async_users")
-            count = cursor.fetchone()[0]
+            _row = cursor.fetchone()
+
+            assert _row is not None
+
+            count = _row[0]
             print(f"✓ Total users: {count}")
 
     # Connection and cursor are automatically closed
@@ -275,6 +282,7 @@ async def complex_workflow(use_lock: bool = False) -> None:
             ("Wireless Mouse",),
         )
         row = cursor.fetchone()
+        assert row is not None
         if row:
             print(f"  Found: {row[0]}")
             print(f"  Category: {row[1]}, Price: ${row[2]:.2f}, Stock: {row[3]}")
@@ -296,6 +304,7 @@ async def complex_workflow(use_lock: bool = False) -> None:
             ("Laptop Pro",),
         )
         row = cursor.fetchone()
+        assert row is not None
         if row:
             print(f"  {row[0]}: ${row[1]:.2f} (was $1299.99)")
             print("✓ Price increase verified")
@@ -316,7 +325,7 @@ async def complex_workflow(use_lock: bool = False) -> None:
             (0,),
         )
         inactive = cursor.fetchall()
-        for name, in inactive:
+        for (name,) in inactive:
             print(f"  Removing: {name}")
         await cursor.execute("DELETE FROM async_complex_products WHERE active = ?", (0,))
         await conn.commit()
@@ -344,6 +353,7 @@ async def complex_workflow(use_lock: bool = False) -> None:
             ("Monitor Stand",),
         )
         row = cursor.fetchone()
+        assert row is not None
         if row is None:
             print("  Monitor Stand not found (successfully deleted)")
             print("✓ Non-existent query returns None as expected")
@@ -380,12 +390,10 @@ async def main() -> None:
 Examples:
   uv run python -B examples/async_aio_lock_basic_usage.py              # Without lock (shows warnings)
   uv run python -B examples/async_aio_lock_basic_usage.py --with-lock  # With lock (no warnings)
-        """
+        """,
     )
     parser.add_argument(
-        "--with-lock",
-        action="store_true",
-        help="Use AioLock to suppress transaction warnings"
+        "--with-lock", action="store_true", help="Use AioLock to suppress transaction warnings"
     )
     args = parser.parse_args()
 
@@ -398,8 +406,6 @@ Examples:
     else:
         print("(WITHOUT LOCK - may show transaction warnings)")
     print("=" * 60)
-
-
 
     try:
         # Run examples in sequence

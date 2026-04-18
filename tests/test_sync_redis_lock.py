@@ -370,11 +370,11 @@ class TestSyncRedisLockWithOperations:
                 warnings.simplefilter("always")
                 cursor.execute("BEGIN")
                 transaction_warnings = [
-                    x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
-                assert len(transaction_warnings) == 0, (
-                    "RedisLock should suppress BEGIN warnings"
-                )
+                assert len(transaction_warnings) == 0, "RedisLock should suppress BEGIN warnings"
         finally:
             cursor.close()
             conn.close()
@@ -387,9 +387,7 @@ class TestSyncRedisLockWithOperations:
 
         try:
             cursor.execute("DROP TABLE IF EXISTS redis_select_test")
-            cursor.execute(
-                "CREATE TABLE redis_select_test (id INTEGER PRIMARY KEY, value TEXT)"
-            )
+            cursor.execute("CREATE TABLE redis_select_test (id INTEGER PRIMARY KEY, value TEXT)")
             cursor.execute("INSERT INTO redis_select_test (value) VALUES (?)", ("test",))
             conn.commit()
 
@@ -409,9 +407,7 @@ class TestSyncRedisLockWithOperations:
 
         try:
             cursor.execute("DROP TABLE IF EXISTS redis_crud_ops")
-            cursor.execute(
-                "CREATE TABLE redis_crud_ops (id INTEGER PRIMARY KEY, val TEXT)"
-            )
+            cursor.execute("CREATE TABLE redis_crud_ops (id INTEGER PRIMARY KEY, val TEXT)")
             conn.commit()
 
             with lock:
@@ -536,7 +532,9 @@ class TestSyncRedisLockDeadlockPrevention:
         # show lost updates depending on timing. The point is: without locking,
         # you CANNOT guarantee correctness. With RedisLock (see other tests),
         # correctness IS guaranteed.
-        print(f"\n  Without lock: Expected ${expected_final:.2f}, got ${final_balance:.2f} "
-              f"(diff: ${abs(final_balance - expected_final):.2f})")
+        print(
+            f"\n  Without lock: Expected ${expected_final:.2f}, got ${final_balance:.2f} "
+            f"(diff: ${abs(final_balance - expected_final):.2f})"
+        )
         # Just verify the account wasn't deleted or corrupted
         assert final_balance > 0, "Balance should remain positive"

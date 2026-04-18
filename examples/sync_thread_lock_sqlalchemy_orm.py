@@ -1,3 +1,4 @@
+# ty: ignore[unresolved-attribute]
 """SQLAlchemy ORM examples for rqlite.
 
 This example demonstrates using SQLAlchemy ORM with rqlite database.
@@ -34,6 +35,7 @@ from rqlite import ThreadLock
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
+
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
@@ -41,6 +43,7 @@ def print_docstring(func: Callable) -> Callable:
             print(f"📝 {func.__name__}: {func.__doc__.strip()}")
             print("─" * 60)
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -158,8 +161,7 @@ def bulk_operations(use_lock: bool = False):
     with Session(engine) as session:
         # Bulk insert - all statements queued until commit
         users = [
-            User(name=f"User{i}", email=f"user{i}@example.com", age=20 + i)
-            for i in range(5, 10)
+            User(name=f"User{i}", email=f"user{i}@example.com", age=20 + i) for i in range(5, 10)
         ]
 
         session.add_all(users)
@@ -202,9 +204,9 @@ def complex_workflow(use_lock: bool = False):
 
         # Step 3: SELECT FEW - Filter users by age range
         print("\n[STEP 3] SELECT FEW: Users aged 30-40")
-        filtered_users = session.query(User).filter(
-            User.age >= 30, User.age <= 40
-        ).order_by(User.name).all()
+        filtered_users = (
+            session.query(User).filter(User.age >= 30, User.age <= 40).order_by(User.name).all()
+        )
         for user in filtered_users:
             print(f"  {user.name}: age {user.age}")
         print(f"✓ Found {len(filtered_users)} users in age range")
@@ -222,10 +224,10 @@ def complex_workflow(use_lock: bool = False):
         print("\n[STEP 5] UPDATE: Age up Emma and Frank by 2 years")
         emma = session.query(User).filter_by(name="Emma").first()
         frank = session.query(User).filter_by(name="Frank").first()
-        if emma:
+        if emma and emma.age is not None:
             emma.age += 2
             print(f"  Emma: {emma.age - 2} → {emma.age}")
-        if frank:
+        if frank and frank.age is not None:
             frank.age += 2
             print(f"  Frank: {frank.age - 2} → {frank.age}")
         session.commit()
@@ -275,12 +277,10 @@ def main():
 Examples:
   uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py              # Without lock (shows warnings)
   uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py --with-lock  # With lock (no warnings)
-        """
+        """,
     )
     parser.add_argument(
-        "--with-lock",
-        action="store_true",
-        help="Use ThreadLock to suppress transaction warnings"
+        "--with-lock", action="store_true", help="Use ThreadLock to suppress transaction warnings"
     )
     args = parser.parse_args()
 
@@ -308,6 +308,7 @@ Examples:
         print(f"\n✗ Error: {e}")
         print("Make sure rqlite is running on localhost:4001")
         import traceback
+
         traceback.print_exc()
 
 

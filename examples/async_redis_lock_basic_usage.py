@@ -1,3 +1,4 @@
+# ty: ignore[unresolved-attribute]
 """Async Redis distributed lock examples for rqlite.
 
 This example demonstrates how to use AioRedisLock with the async rqlite
@@ -33,6 +34,7 @@ from rqlite import AioRedisLock
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
+
     @functools.wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
@@ -115,6 +117,7 @@ async def context_manager_pattern() -> None:
                     ("ACC001",),
                 )
                 row = cursor.fetchone()
+                assert row is not None
                 old_balance = row[0]
 
                 await cursor.execute(
@@ -127,9 +130,15 @@ async def context_manager_pattern() -> None:
                     "SELECT balance FROM redis_async_context WHERE account=?",
                     ("ACC001",),
                 )
-                new_balance = cursor.fetchone()[0]
+                _row = cursor.fetchone()
 
-            print(f"✓ With async lock: ${old_balance:.2f} → ${new_balance:.2f} (transferred ${amount:.2f})")
+                assert _row is not None
+
+                new_balance = _row[0]
+
+            print(
+                f"✓ With async lock: ${old_balance:.2f} → ${new_balance:.2f} (transferred ${amount:.2f})"
+            )
 
         finally:
             await cursor.close()
@@ -177,7 +186,11 @@ async def transfer_workflow() -> None:
                 "SELECT balance FROM redis_async_accounts WHERE account=?",
                 ("ACC001",),
             )
-            sender_bal = cursor.fetchone()[0]
+            _row = cursor.fetchone()
+
+            assert _row is not None
+
+            sender_bal = _row[0]
 
             if sender_bal < amount:
                 print(f"  ✗ Insufficient funds: ${sender_bal:.2f} < ${amount:.2f}")
@@ -192,7 +205,11 @@ async def transfer_workflow() -> None:
                 "SELECT balance FROM redis_async_accounts WHERE account=?",
                 ("ACC002",),
             )
-            receiver_bal = cursor.fetchone()[0]
+            _row = cursor.fetchone()
+
+            assert _row is not None
+
+            receiver_bal = _row[0]
 
             await cursor.execute(
                 "UPDATE redis_async_accounts SET balance=? WHERE account=?",
@@ -234,9 +251,7 @@ async def concurrent_tasks_demo() -> None:
             # Create per-task table for isolation
             table = f"redis_async_worker_{task_id}"
             await cursor.execute(f"DROP TABLE IF EXISTS {table}")
-            await cursor.execute(
-                f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, value TEXT)"
-            )
+            await cursor.execute(f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, value TEXT)")
             await conn.commit()
 
             # Each task acquires the SAME lock — serialized access
@@ -245,7 +260,11 @@ async def concurrent_tasks_demo() -> None:
                 await conn.commit()
 
                 await cursor.execute(f"SELECT COUNT(*) FROM {table}")
-                count = cursor.fetchone()[0]
+                _row = cursor.fetchone()
+
+                assert _row is not None
+
+                count = _row[0]
                 results.append(f"  Task {task_id}: acquired lock, count={count}")
 
         finally:

@@ -1,6 +1,5 @@
 """Tests for sync DB-API 2.0 cursor with ThreadLock."""
 
-
 import pytest
 
 
@@ -491,12 +490,8 @@ class TestSyncThreadLockComplexCursorWorkflow:
             result = cursor.fetchone()
             assert result is None
             # Filter for our specific warning
-            our_warnings = [
-                x for x in w if "No results to fetch" in str(x.message)
-            ]
-            assert len(our_warnings) == 0, (
-                "Empty SELECT result should not trigger warning"
-            )
+            our_warnings = [x for x in w if "No results to fetch" in str(x.message)]
+            assert len(our_warnings) == 0, "Empty SELECT result should not trigger warning"
 
         # Same test with fetchall
         with warnings.catch_warnings(record=True) as w:
@@ -507,9 +502,7 @@ class TestSyncThreadLockComplexCursorWorkflow:
             )
             results = cursor.fetchall()
             assert results == []
-            our_warnings = [
-                x for x in w if "No results to fetch" in str(x.message)
-            ]
+            our_warnings = [x for x in w if "No results to fetch" in str(x.message)]
             assert len(our_warnings) == 0
 
         # Same test with iteration
@@ -521,7 +514,5 @@ class TestSyncThreadLockComplexCursorWorkflow:
             )
             results = list(cursor)
             assert results == []
-            our_warnings = [
-                x for x in w if "No results to fetch" in str(x.message)
-            ]
+            our_warnings = [x for x in w if "No results to fetch" in str(x.message)]
             assert len(our_warnings) == 0

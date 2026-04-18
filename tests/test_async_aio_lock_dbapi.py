@@ -53,6 +53,7 @@ class TestAsyncAioLockConnection:
 
     def test_async_context_manager(self):
         """Test async connection as context manager."""
+
         async def _test():
             async with rqlite.async_connect("localhost", 4001) as conn:
                 assert not conn._closed
@@ -70,7 +71,7 @@ class TestAsyncAioLockConnection:
             await conn.commit()
 
         asyncio.run(_test())
-        conn.close()
+        # Connection already closed in _test() via context manager or manually
 
 
 class TestAsyncAioLockConnectionWithAuth:
@@ -88,10 +89,11 @@ class TestAsyncAioLockConnectionWithAuth:
         async def _test():
             assert conn.username == "testuser"
             assert conn.password == "testpass"
-            assert conn._auth == ("testuser", "testpass")
+            assert conn._auth is not None
+            assert conn._auth.login == "testuser"
+            assert conn._auth.password == "testpass"
 
         asyncio.run(_test())
-        conn.close()
 
 
 class TestAsyncAioLockConnectionWithTimeout:
@@ -105,7 +107,7 @@ class TestAsyncAioLockConnectionWithTimeout:
             assert conn.timeout == 60.0
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockComplexConnectionWorkflow:
@@ -185,6 +187,7 @@ class TestAsyncAioLockComplexConnectionWorkflow:
                 ("Item C",),
             )
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 350
 
             # Step 8: DELETE
@@ -207,7 +210,7 @@ class TestAsyncAioLockComplexConnectionWorkflow:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_multiple_cursors_same_connection(self):
         """Test using multiple cursors on the same async connection."""
@@ -230,18 +233,21 @@ class TestAsyncAioLockComplexConnectionWorkflow:
             assert rows[0] == (1, "data1")
             assert rows[1] == (2, "data2")
 
-            await cursor1.execute("UPDATE async_multi_cursor_test SET data = ? WHERE id = ?", ("updated", 1))
+            await cursor1.execute(
+                "UPDATE async_multi_cursor_test SET data = ? WHERE id = ?", ("updated", 1)
+            )
             await conn.commit()
 
             await cursor2.execute("SELECT data FROM async_multi_cursor_test WHERE id = ?", (1,))
             row = cursor2.fetchone()
+            assert row is not None
             assert row[0] == "updated"
 
             await cursor1.close()
             await cursor2.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockReadConsistency:
@@ -258,11 +264,12 @@ class TestAsyncAioLockReadConsistency:
             cursor = await conn.cursor()
             await cursor.execute("SELECT 1 as test")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 1
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_select_with_weak_consistency(self):
         """Test SELECT with WEAK consistency."""
@@ -286,7 +293,7 @@ class TestAsyncAioLockReadConsistency:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_select_with_none_consistency(self):
         """Test SELECT with NONE consistency."""
@@ -310,7 +317,7 @@ class TestAsyncAioLockReadConsistency:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockEmptyResultSets:
@@ -337,21 +344,17 @@ class TestAsyncAioLockEmptyResultSets:
                 )
                 row = cursor.fetchone()
                 assert row is None
-                no_results_warnings = [
-                    x for x in w if "No results to fetch" in str(x.message)
-                ]
+                no_results_warnings = [x for x in w if "No results to fetch" in str(x.message)]
                 assert len(no_results_warnings) == 0
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 rows = cursor.fetchall()
                 assert rows == []
-                no_results_warnings = [
-                    x for x in w if "No results to fetch" in str(x.message)
-                ]
+                no_results_warnings = [x for x in w if "No results to fetch" in str(x.message)]
                 assert len(no_results_warnings) == 0
 
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]

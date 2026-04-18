@@ -1,3 +1,4 @@
+# ty: ignore[unresolved-attribute]
 """Sync Redis distributed lock examples for rqlite.
 
 This example demonstrates how to use RedisLock with the rqlite DB-API 2.0
@@ -32,6 +33,7 @@ from rqlite import RedisLock
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
+
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
@@ -39,6 +41,7 @@ def print_docstring(func: Callable) -> Callable:
             print(f"📝 {func.__name__}: {func.__doc__.strip()}")
             print("─" * 60)
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -113,6 +116,7 @@ def context_manager_pattern():
                     ("ACC001",),
                 )
                 row = cursor.fetchone()
+                assert row is not None
                 old_balance = row[0]
 
                 cursor.execute(
@@ -125,9 +129,15 @@ def context_manager_pattern():
                     "SELECT balance FROM redis_context WHERE account=?",
                     ("ACC001",),
                 )
-                new_balance = cursor.fetchone()[0]
+                _row = cursor.fetchone()
 
-            print(f"✓ With lock: ${old_balance:.2f} → ${new_balance:.2f} (transferred ${amount:.2f})")
+                assert _row is not None
+
+                new_balance = _row[0]
+
+            print(
+                f"✓ With lock: ${old_balance:.2f} → ${new_balance:.2f} (transferred ${amount:.2f})"
+            )
 
         finally:
             cursor.close()
@@ -175,7 +185,11 @@ def transfer_workflow():
                     "SELECT balance FROM redis_accounts WHERE account=?",
                     ("ACC001",),
                 )
-                sender_bal = cursor.fetchone()[0]
+                _row = cursor.fetchone()
+
+                assert _row is not None
+
+                sender_bal = _row[0]
 
                 if sender_bal < amount:
                     print(f"  ✗ Insufficient funds: ${sender_bal:.2f} < ${amount:.2f}")
@@ -192,7 +206,11 @@ def transfer_workflow():
                     "SELECT balance FROM redis_accounts WHERE account=?",
                     ("ACC002",),
                 )
-                receiver_bal = cursor.fetchone()[0]
+                _row = cursor.fetchone()
+
+                assert _row is not None
+
+                receiver_bal = _row[0]
 
                 # Credit receiver
                 cursor.execute(
@@ -235,9 +253,7 @@ def concurrent_operations_demo():
                 # Create per-thread table for isolation
                 table = f"redis_worker_{thread_id}"
                 cursor.execute(f"DROP TABLE IF EXISTS {table}")
-                cursor.execute(
-                    f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, value TEXT)"
-                )
+                cursor.execute(f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, value TEXT)")
                 conn.commit()
 
                 # Each thread acquires the SAME lock — serialized access
@@ -246,7 +262,11 @@ def concurrent_operations_demo():
                     conn.commit()
 
                     cursor.execute(f"SELECT COUNT(*) FROM {table}")
-                    count = cursor.fetchone()[0]
+                    _row = cursor.fetchone()
+
+                    assert _row is not None
+
+                    count = _row[0]
                     with results_lock:
                         results.append(f"  Thread {thread_id}: acquired lock, count={count}")
 

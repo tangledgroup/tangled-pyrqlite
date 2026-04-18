@@ -1,3 +1,4 @@
+# ty: ignore[unresolved-attribute]
 """Basic usage examples for rqlite DB-API 2.0 client.
 
 This example demonstrates fundamental CRUD operations using the rqlite
@@ -33,6 +34,7 @@ from rqlite import ThreadLock  # sync thread lock
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
+
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
@@ -40,6 +42,7 @@ def print_docstring(func: Callable) -> Callable:
             print(f"📝 {func.__name__}: {func.__doc__.strip()}")
             print("─" * 60)
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -115,6 +118,7 @@ def query_data(use_lock: bool = False):
     print("\nUser named Alice:")
     cursor.execute("SELECT * FROM users WHERE name=?", ("Alice",))
     row = cursor.fetchone()
+    assert row is not None
     if row:
         print(f"  Found: {row}")
 
@@ -190,7 +194,11 @@ def context_manager_example(use_lock: bool = False):
     with rqlite.connect(lock=lock) as conn:
         with conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM users")
-            count = cursor.fetchone()[0]
+            _row = cursor.fetchone()
+
+            assert _row is not None
+
+            count = _row[0]
             print(f"✓ Total users: {count}")
 
     # Connection and cursor are automatically closed
@@ -244,9 +252,7 @@ def complex_workflow(use_lock: bool = False):
 
         # Step 3: SELECT MANY - All products ordered by price
         print("\n[STEP 3] SELECT MANY: All products by price (descending)")
-        cursor.execute(
-            "SELECT name, category, price FROM complex_products ORDER BY price DESC"
-        )
+        cursor.execute("SELECT name, category, price FROM complex_products ORDER BY price DESC")
         rows = cursor.fetchall()
         for name, category, price in rows:
             print(f"  ${price:>8.2f} | {category:<12} | {name}")
@@ -273,6 +279,7 @@ def complex_workflow(use_lock: bool = False):
             ("Wireless Mouse",),
         )
         row = cursor.fetchone()
+        assert row is not None
         if row:
             print(f"  Found: {row[0]}")
             print(f"  Category: {row[1]}, Price: ${row[2]:.2f}, Stock: {row[3]}")
@@ -294,6 +301,7 @@ def complex_workflow(use_lock: bool = False):
             ("Laptop Pro",),
         )
         row = cursor.fetchone()
+        assert row is not None
         if row:
             print(f"  {row[0]}: ${row[1]:.2f} (was $1299.99)")
             print("✓ Price increase verified")
@@ -314,7 +322,7 @@ def complex_workflow(use_lock: bool = False):
             (0,),
         )
         inactive = cursor.fetchall()
-        for name, in inactive:
+        for (name,) in inactive:
             print(f"  Removing: {name}")
         cursor.execute("DELETE FROM complex_products WHERE active = ?", (0,))
         conn.commit()
@@ -342,6 +350,7 @@ def complex_workflow(use_lock: bool = False):
             ("Monitor Stand",),
         )
         row = cursor.fetchone()
+        assert row is not None
         if row is None:
             print("  Monitor Stand not found (successfully deleted)")
             print("✓ Non-existent query returns None as expected")
@@ -378,12 +387,10 @@ def main():
 Examples:
   uv run python -B examples/sync_thread_lock_basic_usage.py              # Without lock (shows warnings)
   uv run python -B examples/sync_thread_lock_basic_usage.py --with-lock  # With lock (no warnings)
-        """
+        """,
     )
     parser.add_argument(
-        "--with-lock",
-        action="store_true",
-        help="Use ThreadLock to suppress transaction warnings"
+        "--with-lock", action="store_true", help="Use ThreadLock to suppress transaction warnings"
     )
     args = parser.parse_args()
 

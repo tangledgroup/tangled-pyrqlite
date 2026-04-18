@@ -240,8 +240,7 @@ class TestAsyncRedisLockDistributedSerialization:
         final = asyncio.run(transfer_task())
         assert final is not None
         assert abs(final - expected_final) < 0.1, (
-            f"Expected ${expected_final:.2f}, got ${final:.2f} — "
-            f"lost updates detected!"
+            f"Expected ${expected_final:.2f}, got ${final:.2f} — lost updates detected!"
         )
 
 
@@ -315,7 +314,9 @@ class TestAsyncRedisLockWithAsyncConnection:
                 warnings.simplefilter("always")
                 await cursor.execute("BEGIN")
                 transaction_warnings = [
-                    x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
                 assert len(transaction_warnings) == 0
 

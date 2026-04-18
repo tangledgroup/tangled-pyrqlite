@@ -1,6 +1,5 @@
 """Tests for sync DB-API 2.0 connection with ThreadLock."""
 
-
 import pytest
 
 import rqlite
@@ -140,6 +139,7 @@ class TestSyncThreadLockComplexConnectionWorkflow:
             )
             row = cursor.fetchone()
             assert row is not None
+            assert row is not None
             assert row[0] == "Item C"
             assert row[1] == 300
 
@@ -156,6 +156,7 @@ class TestSyncThreadLockComplexConnectionWorkflow:
                 ("Item C",),
             )
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 350
 
             # Step 8: DELETE
@@ -209,6 +210,7 @@ class TestSyncThreadLockComplexConnectionWorkflow:
             # Use cursor2 to verify
             cursor2.execute("SELECT data FROM multi_cursor_test WHERE id = ?", (1,))
             row = cursor2.fetchone()
+            assert row is not None
             assert row[0] == "updated"
 
             cursor1.close()
@@ -244,9 +246,7 @@ class TestSyncThreadLockComplexConnectionWorkflow:
                 row = cursor.fetchone()
                 assert row is None
                 # Should NOT have any warnings about "No results to fetch"
-                no_results_warnings = [
-                    x for x in w if "No results to fetch" in str(x.message)
-                ]
+                no_results_warnings = [x for x in w if "No results to fetch" in str(x.message)]
                 assert len(no_results_warnings) == 0, (
                     "Empty SELECT should not trigger 'No results to fetch' warning"
                 )
@@ -256,9 +256,7 @@ class TestSyncThreadLockComplexConnectionWorkflow:
                 warnings.simplefilter("always")
                 rows = cursor.fetchall()
                 assert rows == []
-                no_results_warnings = [
-                    x for x in w if "No results to fetch" in str(x.message)
-                ]
+                no_results_warnings = [x for x in w if "No results to fetch" in str(x.message)]
                 assert len(no_results_warnings) == 0
 
             cursor.close()

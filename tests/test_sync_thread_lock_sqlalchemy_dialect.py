@@ -1,6 +1,5 @@
 """Tests for sync SQLAlchemy Core and ORM with ThreadLock."""
 
-
 import pytest
 from sqlalchemy import (
     create_engine,
@@ -68,9 +67,7 @@ class TestSyncThreadLockSQLAlchemyCore:
 
         # Verify tables exist
         with engine.connect() as conn:
-            result = conn.execute(
-                text("SELECT name FROM sqlite_master WHERE type='table'")
-            )
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
             tables = [row[0] for row in result]
             assert "sa_users" in tables
             assert "sa_products" in tables
@@ -169,6 +166,7 @@ class TestSyncThreadLockSQLAlchemyORM:
 
     def test_session_relationships(self, engine):
         """Test that relationships work (using SQLite dialect base)."""
+
         # Create a simple relationship model
         class Order(Base):
             __tablename__ = "sa_orders"
@@ -269,9 +267,7 @@ class TestSyncThreadLockComplexORMWorkflow:
             assert all_users[-1].name == "Grace"  # Oldest
 
             # SELECT FEW: Filter users by age range
-            filtered_users = session.query(User).filter(
-                User.age >= 30, User.age <= 40
-            ).all()
+            filtered_users = session.query(User).filter(User.age >= 30, User.age <= 40).all()
             assert len(filtered_users) == 2
             names = {u.name for u in filtered_users}
             assert names == {"Frank", "Henry"}
@@ -285,12 +281,15 @@ class TestSyncThreadLockComplexORMWorkflow:
             # UPDATE: Modify users
             emma = session.query(User).filter_by(name="Emma").first()
             frank = session.query(User).filter_by(name="Frank").first()
+            assert emma is not None and emma.age is not None
+            assert frank is not None and frank.age is not None
             emma.age += 2
             frank.age += 2
             session.commit()
 
             # SELECT ONE (verify update)
             emma_updated = session.query(User).filter_by(name="Emma").first()
+            assert emma_updated is not None
             assert emma_updated.age == 30
 
             # DELETE: Remove users under 30
@@ -372,9 +371,7 @@ class TestSyncThreadLockComplexDBAPIWorkflow:
             assert row[1] == 99999
 
             # UPDATE: Increase prices by 10%
-            cursor.execute(
-                "UPDATE dbapi_test_products SET price = CAST(price * 1.10 AS INTEGER)"
-            )
+            cursor.execute("UPDATE dbapi_test_products SET price = CAST(price * 1.10 AS INTEGER)")
             conn.commit()
 
             # SELECT ONE (verify update)
@@ -392,9 +389,7 @@ class TestSyncThreadLockComplexDBAPIWorkflow:
             conn.commit()
 
             # SELECT MANY (final state)
-            cursor.execute(
-                "SELECT name, price, quantity FROM dbapi_test_products ORDER BY price"
-            )
+            cursor.execute("SELECT name, price, quantity FROM dbapi_test_products ORDER BY price")
             rows = cursor.fetchall()
             assert len(rows) == 4  # 6 - 2 deleted
 
@@ -421,9 +416,7 @@ class TestSyncThreadLockComplexDBAPIWorkflow:
             cursor = conn.cursor()
 
             # Execute SELECT that returns no rows
-            cursor.execute(
-                "SELECT * FROM sa_users WHERE name = ?", ("NonExistentUser123",)
-            )
+            cursor.execute("SELECT * FROM sa_users WHERE name = ?", ("NonExistentUser123",))
 
             # fetchone() should return None without warning
             row = cursor.fetchone()

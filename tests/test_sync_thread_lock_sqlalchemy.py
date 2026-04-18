@@ -4,7 +4,6 @@ This module tests SQLAlchemy Core and ORM operations with and without locks,
 ensuring proper integration with rqlite's transaction support.
 """
 
-
 import threading
 import warnings
 
@@ -25,8 +24,8 @@ class Base(DeclarativeBase):
     """Base class for SQLAlchemy models."""
 
 
-class TestLockUser(Base):
-    """Test user model."""
+class UserSA(Base):
+    """Test user model for SQLAlchemy tests."""
 
     __tablename__ = "sa_lock_users"
 
@@ -36,8 +35,8 @@ class TestLockUser(Base):
     age: Mapped[int | None] = mapped_column()
 
 
-class TestLockProduct(Base):
-    """Test product model."""
+class ProductSA(Base):
+    """Test product model for SQLAlchemy tests."""
 
     __tablename__ = "sa_lock_products"
 
@@ -118,9 +117,7 @@ class TestSyncThreadLockSQLAlchemyCoreWithoutLock:
         Base.metadata.create_all(engine_without_lock)
 
         with engine_without_lock.connect() as conn:
-            result = conn.execute(
-                text("SELECT name FROM sqlite_master WHERE type='table'")
-            )
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
             tables = [row[0] for row in result]
             assert "sa_lock_users" in tables
             assert "sa_lock_products" in tables
@@ -128,13 +125,11 @@ class TestSyncThreadLockSQLAlchemyCoreWithoutLock:
     def test_insert_select(self, engine_without_lock, tables_without_lock):
         """Test INSERT and SELECT without lock."""
         with engine_without_lock.connect() as conn:
-            stmt = insert(TestUser).values(
-                name="Alice", email="alice@test.com", age=30
-            )
+            stmt = insert(UserSA).values(name="Alice", email="alice@test.com", age=30)
             conn.execute(stmt)
             conn.commit()
 
-            result = conn.execute(select(TestUser).where(TestUser.name == "Alice"))
+            result = conn.execute(select(UserSA).where(UserSA.name == "Alice"))
             row = result.fetchone()
             assert row is not None
             assert row.name == "Alice"
@@ -144,17 +139,17 @@ class TestSyncThreadLockSQLAlchemyCoreWithoutLock:
         """Test UPDATE without lock."""
         with engine_without_lock.connect() as conn:
             # Insert first
-            stmt = insert(TestUser).values(name="Bob", age=25)
+            stmt = insert(UserSA).values(name="Bob", age=25)
             conn.execute(stmt)
             conn.commit()
 
             # Update
-            stmt = update(TestUser).where(TestUser.name == "Bob").values(age=30)
+            stmt = update(UserSA).where(UserSA.name == "Bob").values(age=30)
             conn.execute(stmt)
             conn.commit()
 
             # Verify
-            result = conn.execute(select(TestUser.age).where(TestUser.name == "Bob"))
+            result = conn.execute(select(UserSA.age).where(UserSA.name == "Bob"))
             row = result.fetchone()
             assert row[0] == 30
 
@@ -164,17 +159,17 @@ class TestSyncThreadLockSQLAlchemyCoreWithoutLock:
 
         with engine_without_lock.connect() as conn:
             # Insert
-            stmt = insert(TestUser).values(name="Charlie", email="charlie@test.com")
+            stmt = insert(UserSA).values(name="Charlie", email="charlie@test.com")
             conn.execute(stmt)
             conn.commit()
 
             # Delete
-            stmt = delete_stmt(TestUser).where(TestUser.name == "Charlie")
+            stmt = delete_stmt(UserSA).where(UserSA.name == "Charlie")
             conn.execute(stmt)
             conn.commit()
 
             # Verify deleted
-            result = conn.execute(select(TestUser).where(TestUser.name == "Charlie"))
+            result = conn.execute(select(UserSA).where(UserSA.name == "Charlie"))
             row = result.fetchone()
             assert row is None
 
@@ -187,9 +182,7 @@ class TestSyncThreadLockSQLAlchemyCoreWithLock:
         Base.metadata.create_all(engine_with_threadlock)
 
         with engine_with_threadlock.connect() as conn:
-            result = conn.execute(
-                text("SELECT name FROM sqlite_master WHERE type='table'")
-            )
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
             tables = [row[0] for row in result]
             assert "sa_lock_users" in tables
             assert "sa_lock_products" in tables
@@ -197,13 +190,11 @@ class TestSyncThreadLockSQLAlchemyCoreWithLock:
     def test_insert_select_with_threadlock(self, engine_with_threadlock, tables_with_lock):
         """Test INSERT and SELECT with ThreadLock."""
         with engine_with_threadlock.connect() as conn:
-            stmt = insert(TestUser).values(
-                name="David", email="david@test.com", age=35
-            )
+            stmt = insert(UserSA).values(name="David", email="david@test.com", age=35)
             conn.execute(stmt)
             conn.commit()
 
-            result = conn.execute(select(TestUser).where(TestUser.name == "David"))
+            result = conn.execute(select(UserSA).where(UserSA.name == "David"))
             row = result.fetchone()
             assert row is not None
             assert row.name == "David"
@@ -213,17 +204,17 @@ class TestSyncThreadLockSQLAlchemyCoreWithLock:
         """Test UPDATE with ThreadLock."""
         with engine_with_threadlock.connect() as conn:
             # Insert first
-            stmt = insert(TestUser).values(name="Eve", age=28)
+            stmt = insert(UserSA).values(name="Eve", age=28)
             conn.execute(stmt)
             conn.commit()
 
             # Update
-            stmt = update(TestUser).where(TestUser.name == "Eve").values(age=32)
+            stmt = update(UserSA).where(UserSA.name == "Eve").values(age=32)
             conn.execute(stmt)
             conn.commit()
 
             # Verify
-            result = conn.execute(select(TestUser.age).where(TestUser.name == "Eve"))
+            result = conn.execute(select(UserSA.age).where(UserSA.name == "Eve"))
             row = result.fetchone()
             assert row[0] == 32
 
@@ -233,17 +224,17 @@ class TestSyncThreadLockSQLAlchemyCoreWithLock:
 
         with engine_with_threadlock.connect() as conn:
             # Insert
-            stmt = insert(TestUser).values(name="Frank", email="frank@test.com")
+            stmt = insert(UserSA).values(name="Frank", email="frank@test.com")
             conn.execute(stmt)
             conn.commit()
 
             # Delete
-            stmt = delete_stmt(TestUser).where(TestUser.name == "Frank")
+            stmt = delete_stmt(UserSA).where(UserSA.name == "Frank")
             conn.execute(stmt)
             conn.commit()
 
             # Verify deleted
-            result = conn.execute(select(TestUser).where(TestUser.name == "Frank"))
+            result = conn.execute(select(UserSA).where(UserSA.name == "Frank"))
             row = result.fetchone()
             assert row is None
 
@@ -255,13 +246,11 @@ class TestSyncThreadLockSQLAlchemyCoreWithLock:
 
         try:
             with engine_with_threading_lock.connect() as conn:
-                stmt = insert(TestUser).values(
-                    name="Grace", email="grace@test.com", age=40
-                )
+                stmt = insert(UserSA).values(name="Grace", email="grace@test.com", age=40)
                 conn.execute(stmt)
                 conn.commit()
 
-                result = conn.execute(select(TestUser).where(TestUser.name == "Grace"))
+                result = conn.execute(select(UserSA).where(UserSA.name == "Grace"))
                 row = result.fetchone()
                 assert row is not None
                 assert row.name == "Grace"
@@ -275,7 +264,7 @@ class TestSyncThreadLockSQLAlchemyORMWithoutLock:
     def test_session_add_commit(self, engine_without_lock, tables_without_lock):
         """Test Session.add() and commit without lock."""
         with Session(engine_without_lock) as session:
-            user = TestUser(name="Henry", email="henry@test.com", age=45)
+            user = UserSA(name="Henry", email="henry@test.com", age=45)
             session.add(user)
             session.commit()
 
@@ -289,22 +278,22 @@ class TestSyncThreadLockSQLAlchemyORMWithoutLock:
                 ("Ivy", "ivy@test.com"),
                 ("Jack", "jack@test.com"),
             ]:
-                session.add(TestUser(name=name, email=email))
+                session.add(UserSA(name=name, email=email))
             session.commit()
 
         # Query
         with Session(engine_without_lock) as session:
-            users = session.query(TestUser).all()
+            users = session.query(UserSA).all()
             assert len(users) == 2
 
-            ivy = session.query(TestUser).filter_by(name="Ivy").first()
+            ivy = session.query(UserSA).filter_by(name="Ivy").first()
             assert ivy is not None
             assert ivy.email == "ivy@test.com"
 
     def test_session_update(self, engine_without_lock, tables_without_lock):
         """Test Session update without lock."""
         with Session(engine_without_lock) as session:
-            user = TestUser(name="Kate", email="kate@test.com", age=25)
+            user = UserSA(name="Kate", email="kate@test.com", age=25)
             session.add(user)
             session.commit()
 
@@ -313,7 +302,8 @@ class TestSyncThreadLockSQLAlchemyORMWithoutLock:
             session.commit()
 
             # Verify
-            updated = session.query(TestUser).filter_by(name="Kate").first()
+            updated = session.query(UserSA).filter_by(name="Kate").first()
+            assert updated is not None
             assert updated.age == 30
 
 
@@ -323,7 +313,7 @@ class TestSyncThreadLockSQLAlchemyORMWithLock:
     def test_session_add_commit_with_threadlock(self, engine_with_threadlock, tables_with_lock):
         """Test Session.add() and commit with ThreadLock."""
         with Session(engine_with_threadlock) as session:
-            user = TestUser(name="Leo", email="leo@test.com", age=50)
+            user = UserSA(name="Leo", email="leo@test.com", age=50)
             session.add(user)
             session.commit()
 
@@ -337,22 +327,22 @@ class TestSyncThreadLockSQLAlchemyORMWithLock:
                 ("Mia", "mia@test.com"),
                 ("Noah", "noah@test.com"),
             ]:
-                session.add(TestUser(name=name, email=email))
+                session.add(UserSA(name=name, email=email))
             session.commit()
 
         # Query
         with Session(engine_with_threadlock) as session:
-            users = session.query(TestUser).all()
+            users = session.query(UserSA).all()
             assert len(users) == 2
 
-            mia = session.query(TestUser).filter_by(name="Mia").first()
+            mia = session.query(UserSA).filter_by(name="Mia").first()
             assert mia is not None
             assert mia.email == "mia@test.com"
 
     def test_session_update_with_threadlock(self, engine_with_threadlock, tables_with_lock):
         """Test Session update with ThreadLock."""
         with Session(engine_with_threadlock) as session:
-            user = TestUser(name="Olivia", email="olivia@test.com", age=28)
+            user = UserSA(name="Olivia", email="olivia@test.com", age=28)
             session.add(user)
             session.commit()
 
@@ -361,7 +351,8 @@ class TestSyncThreadLockSQLAlchemyORMWithLock:
             session.commit()
 
             # Verify
-            updated = session.query(TestUser).filter_by(name="Olivia").first()
+            updated = session.query(UserSA).filter_by(name="Olivia").first()
+            assert updated is not None
             assert updated.age == 35
 
     def test_session_add_commit_with_threading_lock(self, engine_with_threading_lock):
@@ -371,7 +362,7 @@ class TestSyncThreadLockSQLAlchemyORMWithLock:
 
         try:
             with Session(engine_with_threading_lock) as session:
-                user = TestUser(name="Paul", email="paul@test.com", age=55)
+                user = UserSA(name="Paul", email="paul@test.com", age=55)
                 session.add(user)
                 session.commit()
 
@@ -398,11 +389,11 @@ class TestSyncThreadLockSQLAlchemyLockSuppressesWarnings:
                     pass  # Error is OK, we just want to check the warning
 
                 transaction_warnings = [
-                    x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
-                assert len(transaction_warnings) >= 1, (
-                    "BEGIN should warn when no lock is provided"
-                )
+                assert len(transaction_warnings) >= 1, "BEGIN should warn when no lock is provided"
 
     def test_begin_no_warning_with_lock(self, engine_with_threadlock):
         """Test BEGIN SQL does not raise warning with lock."""
@@ -415,11 +406,11 @@ class TestSyncThreadLockSQLAlchemyLockSuppressesWarnings:
                     pass  # Error is OK
 
                 transaction_warnings = [
-                    x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
-                assert len(transaction_warnings) == 0, (
-                    "BEGIN should not warn when lock is provided"
-                )
+                assert len(transaction_warnings) == 0, "BEGIN should not warn when lock is provided"
 
     def test_commit_warning_without_lock(self, engine_without_lock):
         """Test COMMIT SQL raises warning without lock."""
@@ -432,11 +423,11 @@ class TestSyncThreadLockSQLAlchemyLockSuppressesWarnings:
                     pass
 
                 transaction_warnings = [
-                    x for x in w if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
-                assert len(transaction_warnings) >= 1, (
-                    "COMMIT should warn when no lock is provided"
-                )
+                assert len(transaction_warnings) >= 1, "COMMIT should warn when no lock is provided"
 
     def test_commit_no_warning_with_lock(self, engine_with_threadlock):
         """Test COMMIT SQL does not raise warning with lock."""
@@ -449,7 +440,9 @@ class TestSyncThreadLockSQLAlchemyLockSuppressesWarnings:
                     pass
 
                 transaction_warnings = [
-                    x for x in w if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
                 assert len(transaction_warnings) == 0, (
                     "COMMIT should not warn when lock is provided"
@@ -474,41 +467,41 @@ class TestSyncThreadLockSQLAlchemyFullWorkflowWithoutLock:
                     ("Sarah", "sarah@test.com", 40),
                 ]
                 for name, email, age in users:
-                    stmt = insert(TestUser).values(name=name, email=email, age=age)
+                    stmt = insert(UserSA).values(name=name, email=email, age=age)
                     conn.execute(stmt)
                 conn.commit()
 
                 # SELECT ALL
-                result = conn.execute(select(TestUser).order_by(TestUser.age))
+                result = conn.execute(select(UserSA).order_by(UserSA.age))
                 rows = result.fetchall()
                 assert len(rows) == 3
                 assert rows[0].name == "Quinn"
 
                 # SELECT ONE
-                result = conn.execute(select(TestUser).where(TestUser.name == "Ryan"))
+                result = conn.execute(select(UserSA).where(UserSA.name == "Ryan"))
                 row = result.fetchone()
                 assert row is not None
                 assert row.age == 35
 
                 # UPDATE
-                stmt = update(TestUser).where(TestUser.name == "Quinn").values(age=32)
+                stmt = update(UserSA).where(UserSA.name == "Quinn").values(age=32)
                 conn.execute(stmt)
                 conn.commit()
 
                 # SELECT ONE (verify update)
-                result = conn.execute(select(TestUser.age).where(TestUser.name == "Quinn"))
+                result = conn.execute(select(UserSA.age).where(UserSA.name == "Quinn"))
                 row = result.fetchone()
                 assert row[0] == 32
 
                 # DELETE
                 from sqlalchemy import delete
 
-                stmt = delete(TestUser).where(TestUser.name == "Sarah")
+                stmt = delete(UserSA).where(UserSA.name == "Sarah")
                 conn.execute(stmt)
                 conn.commit()
 
                 # SELECT MANY (final)
-                result = conn.execute(select(TestUser))
+                result = conn.execute(select(UserSA))
                 rows = result.fetchall()
                 assert len(rows) == 2
         finally:
@@ -533,41 +526,41 @@ class TestSyncThreadLockSQLAlchemyFullWorkflowWithLock:
                     ("Victor", "victor@test.com", 45),
                 ]
                 for name, email, age in users:
-                    stmt = insert(TestUser).values(name=name, email=email, age=age)
+                    stmt = insert(UserSA).values(name=name, email=email, age=age)
                     conn.execute(stmt)
                 conn.commit()
 
                 # SELECT ALL
-                result = conn.execute(select(TestUser).order_by(TestUser.age))
+                result = conn.execute(select(UserSA).order_by(UserSA.age))
                 rows = result.fetchall()
                 assert len(rows) == 3
                 assert rows[0].name == "Uma"
 
                 # SELECT ONE
-                result = conn.execute(select(TestUser).where(TestUser.name == "Victor"))
+                result = conn.execute(select(UserSA).where(UserSA.name == "Victor"))
                 row = result.fetchone()
                 assert row is not None
                 assert row.age == 45
 
                 # UPDATE
-                stmt = update(TestUser).where(TestUser.name == "Uma").values(age=40)
+                stmt = update(UserSA).where(UserSA.name == "Uma").values(age=40)
                 conn.execute(stmt)
                 conn.commit()
 
                 # SELECT ONE (verify update)
-                result = conn.execute(select(TestUser.age).where(TestUser.name == "Uma"))
+                result = conn.execute(select(UserSA.age).where(UserSA.name == "Uma"))
                 row = result.fetchone()
                 assert row[0] == 40
 
                 # DELETE
                 from sqlalchemy import delete
 
-                stmt = delete(TestUser).where(TestUser.name == "Tom")
+                stmt = delete(UserSA).where(UserSA.name == "Tom")
                 conn.execute(stmt)
                 conn.commit()
 
                 # SELECT MANY (final)
-                result = conn.execute(select(TestUser))
+                result = conn.execute(select(UserSA))
                 rows = result.fetchall()
                 assert len(rows) == 2
         finally:
@@ -583,39 +576,41 @@ class TestSyncThreadLockSQLAlchemyFullWorkflowWithLock:
             with Session(engine_with_threadlock) as session:
                 # CREATE: Insert multiple users
                 new_users = [
-                    TestUser(name="Wendy", email="wendy@test.com", age=28),
-                    TestUser(name="Xavier", email="xavier@test.com", age=35),
-                    TestUser(name="Yolanda", email="yolanda@test.com", age=42),
+                    UserSA(name="Wendy", email="wendy@test.com", age=28),
+                    UserSA(name="Xavier", email="xavier@test.com", age=35),
+                    UserSA(name="Yolanda", email="yolanda@test.com", age=42),
                 ]
                 session.add_all(new_users)
                 session.commit()
 
                 # SELECT MANY: Get all users ordered by age
-                all_users = session.query(TestUser).order_by(TestUser.age.asc()).all()
+                all_users = session.query(UserSA).order_by(UserSA.age.asc()).all()
                 assert len(all_users) == 3
                 assert all_users[0].name == "Wendy"
 
                 # SELECT ONE: Get specific user
-                xavier = session.query(TestUser).filter_by(name="Xavier").first()
+                xavier = session.query(UserSA).filter_by(name="Xavier").first()
                 assert xavier is not None
                 assert xavier.age == 35
 
                 # UPDATE: Modify users
-                wendy = session.query(TestUser).filter_by(name="Wendy").first()
+                wendy = session.query(UserSA).filter_by(name="Wendy").first()
+                assert wendy is not None and wendy.age is not None
                 wendy.age += 2
                 session.commit()
 
                 # SELECT ONE (verify update)
-                wendy_updated = session.query(TestUser).filter_by(name="Wendy").first()
+                wendy_updated = session.query(UserSA).filter_by(name="Wendy").first()
+                assert wendy_updated is not None
                 assert wendy_updated.age == 30
 
                 # DELETE: Remove one user
-                yolanda = session.query(TestUser).filter_by(name="Yolanda").first()
+                yolanda = session.query(UserSA).filter_by(name="Yolanda").first()
                 session.delete(yolanda)
                 session.commit()
 
                 # SELECT MANY (final state)
-                remaining = session.query(TestUser).all()
+                remaining = session.query(UserSA).all()
                 assert len(remaining) == 2
         finally:
             Base.metadata.drop_all(engine_with_threadlock)

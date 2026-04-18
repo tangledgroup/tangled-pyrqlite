@@ -69,14 +69,14 @@ class TestSyncThreadLockWithThreadingLock:
 
     def test_sync_thread_lock_connection_with_threading_lock(self):
         """Test connection can be created with threading.Lock."""
-        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())
+        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())  # ty: ignore[invalid-argument-type]
         assert conn._lock is not None
         assert isinstance(conn._lock, LockProtocol)
         conn.close()
 
     def test_sync_thread_lock_cursor_inherits_threading_lock(self):
         """Test cursor inherits threading.Lock from connection."""
-        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())
+        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())  # ty: ignore[invalid-argument-type]
         cursor = conn.cursor()
         assert cursor._lock is not None
         assert isinstance(cursor._lock, LockProtocol)
@@ -133,11 +133,11 @@ class TestSyncThreadLockWarningSuppression:
             cursor.execute("BEGIN")
 
             transaction_warnings = [
-                x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
+                x
+                for x in w
+                if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
             ]
-            assert len(transaction_warnings) == 1, (
-                "BEGIN should warn when no lock is provided"
-            )
+            assert len(transaction_warnings) == 1, "BEGIN should warn when no lock is provided"
 
     def test_sync_thread_lock_begin_no_warning_with_lock(self):
         """Test BEGIN SQL does not raise warning with ThreadLock."""
@@ -151,11 +151,11 @@ class TestSyncThreadLockWarningSuppression:
                 cursor.execute("BEGIN")
 
                 transaction_warnings = [
-                    x for x in w if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "BEGIN" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
-                assert len(transaction_warnings) == 0, (
-                    "BEGIN should not warn when lock is provided"
-                )
+                assert len(transaction_warnings) == 0, "BEGIN should not warn when lock is provided"
         finally:
             cursor.close()
             conn.close()
@@ -180,7 +180,9 @@ class TestSyncThreadLockWarningSuppression:
                 cursor.execute("COMMIT")
 
                 transaction_warnings = [
-                    x for x in w if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "COMMIT" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
                 assert len(transaction_warnings) == 0
         finally:
@@ -206,7 +208,9 @@ class TestSyncThreadLockWarningSuppression:
                 warnings.simplefilter("always")
                 cursor.execute("ROLLBACK")
                 transaction_warnings = [
-                    x for x in w if "ROLLBACK" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "ROLLBACK" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
                 assert len(transaction_warnings) == 0
         finally:
@@ -232,7 +236,9 @@ class TestSyncThreadLockWarningSuppression:
                 warnings.simplefilter("always")
                 cursor.execute("SAVEPOINT my_sp")
                 transaction_warnings = [
-                    x for x in w if "SAVEPOINT" in str(x.message) or "not supported" in str(x.message).lower()
+                    x
+                    for x in w
+                    if "SAVEPOINT" in str(x.message) or "not supported" in str(x.message).lower()
                 ]
                 assert len(transaction_warnings) == 0
         finally:
@@ -251,7 +257,9 @@ class TestSyncThreadLockWithOperations:
 
         try:
             cursor.execute("DROP TABLE IF EXISTS sync_thread_lock_test_select")
-            cursor.execute("CREATE TABLE sync_thread_lock_test_select (id INTEGER PRIMARY KEY, name TEXT)")
+            cursor.execute(
+                "CREATE TABLE sync_thread_lock_test_select (id INTEGER PRIMARY KEY, name TEXT)"
+            )
             conn.commit()
 
             cursor.execute("INSERT INTO sync_thread_lock_test_select (name) VALUES (?)", ("test",))
@@ -273,14 +281,19 @@ class TestSyncThreadLockWithOperations:
 
         try:
             cursor.execute("DROP TABLE IF EXISTS sync_thread_lock_test_insert")
-            cursor.execute("CREATE TABLE sync_thread_lock_test_insert (id INTEGER PRIMARY KEY, value TEXT)")
+            cursor.execute(
+                "CREATE TABLE sync_thread_lock_test_insert (id INTEGER PRIMARY KEY, value TEXT)"
+            )
             conn.commit()
 
-            cursor.execute("INSERT INTO sync_thread_lock_test_insert (value) VALUES (?)", ("hello",))
+            cursor.execute(
+                "INSERT INTO sync_thread_lock_test_insert (value) VALUES (?)", ("hello",)
+            )
             conn.commit()
 
             cursor.execute("SELECT COUNT(*) FROM sync_thread_lock_test_insert")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 1
         finally:
             cursor.close()
@@ -294,7 +307,9 @@ class TestSyncThreadLockWithOperations:
 
         try:
             cursor.execute("DROP TABLE IF EXISTS sync_thread_lock_test_update")
-            cursor.execute("CREATE TABLE sync_thread_lock_test_update (id INTEGER PRIMARY KEY, value TEXT)")
+            cursor.execute(
+                "CREATE TABLE sync_thread_lock_test_update (id INTEGER PRIMARY KEY, value TEXT)"
+            )
             conn.commit()
 
             cursor.execute("INSERT INTO sync_thread_lock_test_update (value) VALUES (?)", ("old",))
@@ -305,6 +320,7 @@ class TestSyncThreadLockWithOperations:
 
             cursor.execute("SELECT value FROM sync_thread_lock_test_update")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == "new"
         finally:
             cursor.close()
@@ -318,17 +334,24 @@ class TestSyncThreadLockWithOperations:
 
         try:
             cursor.execute("DROP TABLE IF EXISTS sync_thread_lock_test_delete")
-            cursor.execute("CREATE TABLE sync_thread_lock_test_delete (id INTEGER PRIMARY KEY, value TEXT)")
+            cursor.execute(
+                "CREATE TABLE sync_thread_lock_test_delete (id INTEGER PRIMARY KEY, value TEXT)"
+            )
             conn.commit()
 
-            cursor.execute("INSERT INTO sync_thread_lock_test_delete (value) VALUES (?)", ("to_delete",))
+            cursor.execute(
+                "INSERT INTO sync_thread_lock_test_delete (value) VALUES (?)", ("to_delete",)
+            )
             conn.commit()
 
-            cursor.execute("DELETE FROM sync_thread_lock_test_delete WHERE value = ?", ("to_delete",))
+            cursor.execute(
+                "DELETE FROM sync_thread_lock_test_delete WHERE value = ?", ("to_delete",)
+            )
             conn.commit()
 
             cursor.execute("SELECT COUNT(*) FROM sync_thread_lock_test_delete")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 0
         finally:
             cursor.close()
@@ -365,17 +388,26 @@ class TestSyncThreadLockMultipleCursors:
 
         try:
             cursor1.execute("DROP TABLE IF EXISTS sync_thread_lock_multi_cursor_test")
-            cursor1.execute("CREATE TABLE sync_thread_lock_multi_cursor_test (id INTEGER PRIMARY KEY, data TEXT)")
+            cursor1.execute(
+                "CREATE TABLE sync_thread_lock_multi_cursor_test (id INTEGER PRIMARY KEY, data TEXT)"
+            )
             conn.commit()
 
-            cursor1.execute("INSERT INTO sync_thread_lock_multi_cursor_test (data) VALUES (?)", ("from_cursor1",))
+            cursor1.execute(
+                "INSERT INTO sync_thread_lock_multi_cursor_test (data) VALUES (?)",
+                ("from_cursor1",),
+            )
             conn.commit()
 
-            cursor2.execute("INSERT INTO sync_thread_lock_multi_cursor_test (data) VALUES (?)", ("from_cursor2",))
+            cursor2.execute(
+                "INSERT INTO sync_thread_lock_multi_cursor_test (data) VALUES (?)",
+                ("from_cursor2",),
+            )
             conn.commit()
 
             cursor1.execute("SELECT COUNT(*) FROM sync_thread_lock_multi_cursor_test")
             row = cursor1.fetchone()
+            assert row is not None
             assert row[0] == 2
 
             cursor2.execute("SELECT data FROM sync_thread_lock_multi_cursor_test ORDER BY data")
@@ -441,16 +473,22 @@ class TestSyncThreadLockIntegration:
 
             cursor.execute("SELECT COUNT(*) FROM sync_thread_lock_full_workflow")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 3
 
             cursor.execute("SELECT * FROM sync_thread_lock_full_workflow ORDER BY value")
             cursor.fetchall()
 
-            cursor.execute("UPDATE sync_thread_lock_full_workflow SET value = ? WHERE name = ?", (10, "B"))
+            cursor.execute(
+                "UPDATE sync_thread_lock_full_workflow SET value = ? WHERE name = ?", (10, "B")
+            )
             conn.commit()
 
-            cursor.execute("SELECT value FROM sync_thread_lock_full_workflow WHERE name = ?", ("B",))
+            cursor.execute(
+                "SELECT value FROM sync_thread_lock_full_workflow WHERE name = ?", ("B",)
+            )
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 10
 
             cursor.execute("DELETE FROM sync_thread_lock_full_workflow WHERE name = ?", ("C",))
@@ -458,6 +496,7 @@ class TestSyncThreadLockIntegration:
 
             cursor.execute("SELECT COUNT(*) FROM sync_thread_lock_full_workflow")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 2
         finally:
             cursor.close()
@@ -466,7 +505,7 @@ class TestSyncThreadLockIntegration:
     def test_sync_thread_lock_full_workflow_with_threading_lock(self):
         """Test complete CRUD workflow with threading.Lock."""
         lock = threading.Lock()
-        conn = rqlite.connect(host="localhost", port=4001, lock=lock)
+        conn = rqlite.connect(host="localhost", port=4001, lock=lock)  # ty: ignore[invalid-argument-type]
         cursor = conn.cursor()
 
         try:
@@ -479,7 +518,9 @@ class TestSyncThreadLockIntegration:
             """)
             conn.commit()
 
-            cursor.execute("INSERT INTO sync_thread_lock_threading_workflow (data) VALUES (?)", ("test",))
+            cursor.execute(
+                "INSERT INTO sync_thread_lock_threading_workflow (data) VALUES (?)", ("test",)
+            )
             conn.commit()
 
             cursor.execute("SELECT * FROM sync_thread_lock_threading_workflow")

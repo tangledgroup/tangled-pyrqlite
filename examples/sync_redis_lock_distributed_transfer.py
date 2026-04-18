@@ -49,21 +49,27 @@ def _worker_no_lock(args: tuple) -> dict:
             # Read current balance (no lock — may read stale data)
             cursor.execute("SELECT balance FROM transfer_accounts WHERE account=?", ("SENDER",))
             row = cursor.fetchone()
+            assert row is not None
             if row is None:
                 continue
             balance = row[0]
 
             # Simulate some processing delay to widen race window
             import time as _time
+
             _time.sleep(random.uniform(0.001, 0.01))
 
             # Write new balance (may overwrite another process's update)
-            cursor.execute("UPDATE transfer_accounts SET balance=? WHERE account=?", (balance - amount, "SENDER"))
+            cursor.execute(
+                "UPDATE transfer_accounts SET balance=? WHERE account=?",
+                (balance - amount, "SENDER"),
+            )
             conn.commit()
 
         # Final read to check result
         cursor.execute("SELECT balance FROM transfer_accounts WHERE account=?", ("SENDER",))
         row = cursor.fetchone()
+        assert row is not None
         final_balance = row[0] if row else None
 
         return {"final_balance": final_balance, "iterations": iterations}
@@ -89,21 +95,27 @@ def _worker_with_lock(args: tuple) -> dict:
             with lock:
                 cursor.execute("SELECT balance FROM transfer_accounts WHERE account=?", ("SENDER",))
                 row = cursor.fetchone()
+                assert row is not None
                 if row is None:
                     break
                 balance = row[0]
 
                 # Simulate processing delay — now safe, another process waits
                 import time as _time
+
                 _time.sleep(random.uniform(0.001, 0.01))
 
                 # Write new balance (serialized — no lost updates)
-                cursor.execute("UPDATE transfer_accounts SET balance=? WHERE account=?", (balance - amount, "SENDER"))
+                cursor.execute(
+                    "UPDATE transfer_accounts SET balance=? WHERE account=?",
+                    (balance - amount, "SENDER"),
+                )
                 conn.commit()
 
         # Final read to check result
         cursor.execute("SELECT balance FROM transfer_accounts WHERE account=?", ("SENDER",))
         row = cursor.fetchone()
+        assert row is not None
         final_balance = row[0] if row else None
 
         return {"final_balance": final_balance, "iterations": iterations}
@@ -235,15 +247,21 @@ Prerequisites:
         help="Run both scenarios (no-lock then with-lock)",
     )
     parser.add_argument(
-        "--processes", type=int, default=4,
+        "--processes",
+        type=int,
+        default=4,
         help="Number of concurrent processes (default: 4)",
     )
     parser.add_argument(
-        "--iterations", type=int, default=10,
+        "--iterations",
+        type=int,
+        default=10,
         help="Iterations per process (default: 10)",
     )
     parser.add_argument(
-        "--amount", type=float, default=50.0,
+        "--amount",
+        type=float,
+        default=50.0,
         help="Transfer amount per iteration (default: 50.0)",
     )
     args = parser.parse_args()
@@ -294,10 +312,13 @@ Prerequisites:
 
         # Reset balance for fair comparison
         import rqlite
+
         conn = rqlite.connect(host="localhost", port=4001)
         cursor = conn.cursor()
         try:
-            cursor.execute("UPDATE transfer_accounts SET balance=? WHERE account=?", (5000.0, "SENDER"))
+            cursor.execute(
+                "UPDATE transfer_accounts SET balance=? WHERE account=?", (5000.0, "SENDER")
+            )
             conn.commit()
         finally:
             cursor.close()

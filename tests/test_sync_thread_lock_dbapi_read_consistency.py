@@ -1,6 +1,5 @@
 """Tests for sync DB-API 2.0 read consistency with ThreadLock."""
 
-
 import pytest
 
 import rqlite
@@ -114,7 +113,7 @@ class TestSyncThreadLockConnectionReadConsistency:
     def test_invalid_consistency_string_raises_error(self):
         """Test that invalid consistency string raises ValueError."""
         with pytest.raises(ValueError, match="Invalid read_consistency"):
-            rqlite.connect(host="localhost", port=4001, read_consistency="invalid")
+            rqlite.connect(host="localhost", port=4001, read_consistency="invalid")  # ty: ignore[invalid-argument-type]
 
 
 class TestSyncThreadLockCursorReadConsistency:
@@ -128,7 +127,9 @@ class TestSyncThreadLockCursorReadConsistency:
         cursor = conn.cursor()
 
         # Create a test table first
-        cursor.execute("CREATE TABLE IF NOT EXISTS test_consistency (id INTEGER PRIMARY KEY, name TEXT)")
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS test_consistency (id INTEGER PRIMARY KEY, name TEXT)"
+        )
         conn.commit()
 
         # Execute SELECT - should use LINEARIZABLE by default
@@ -291,7 +292,7 @@ class TestSyncThreadLockCursorReadConsistency:
 
         # Verify deletion
         cursor.execute("SELECT COUNT(*) FROM test_write")
-        count = cursor.fetchone()[0]
+        count = cursor.fetchone()[0]  # ty: ignore[not-subscriptable]
         assert count == 0
 
         cursor.close()
@@ -456,6 +457,7 @@ class TestSyncThreadLockReadConsistencyIntegration:
         for _ in range(3):
             cursor.execute("SELECT 1 as test")
             result = cursor.fetchone()
+            assert result is not None
             assert result[0] == 1
 
         cursor.close()

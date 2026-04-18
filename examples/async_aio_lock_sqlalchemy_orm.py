@@ -1,3 +1,4 @@
+# ty: ignore[unresolved-attribute]
 """Async AioLock SQLAlchemy ORM examples for rqlite.
 
 This example demonstrates using SQLAlchemy 2.0 async ORM with rqlite database.
@@ -39,6 +40,7 @@ from rqlite import AioLock
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
+
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
@@ -46,6 +48,7 @@ def print_docstring(func: Callable) -> Callable:
             print(f"📝 {func.__name__}: {func.__doc__.strip()}")
             print("─" * 60)
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -86,9 +89,7 @@ async def add_users(use_lock: bool = False):
     """Add users using SQLAlchemy async ORM."""
     lock = AioLock() if use_lock else None
     connect_args = {"lock": lock} if use_lock else {}
-    engine = create_async_engine(
-        "rqlite+aiorqlite://localhost:4001", connect_args=connect_args
-    )
+    engine = create_async_engine("rqlite+aiorqlite://localhost:4001", connect_args=connect_args)
     session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_local() as session:
@@ -115,9 +116,7 @@ async def query_users(use_lock: bool = False):
     """Query users using SQLAlchemy async ORM."""
     lock = AioLock() if use_lock else None
     connect_args = {"lock": lock} if use_lock else {}
-    engine = create_async_engine(
-        "rqlite+aiorqlite://localhost:4001", connect_args=connect_args
-    )
+    engine = create_async_engine("rqlite+aiorqlite://localhost:4001", connect_args=connect_args)
     session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_local() as session:
@@ -129,18 +128,14 @@ async def query_users(use_lock: bool = False):
 
         # Filter by name
         print("\nUser named Alice:")
-        result = await session.execute(
-            select(User).where(User.name == "Alice")
-        )
+        result = await session.execute(select(User).where(User.name == "Alice"))
         alice = result.scalar_one_or_none()
         if alice:
             print(f"  Found: {alice.name} - {alice.email}")
 
         # Filter with conditions
         print("\nUsers over 30:")
-        result = await session.execute(
-            select(User).where(User.age > 30)
-        )
+        result = await session.execute(select(User).where(User.age > 30))
         for user in result.scalars().all():
             print(f"  {user.name} (age {user.age})")
 
@@ -152,16 +147,12 @@ async def update_user(use_lock: bool = False):
     """Update a user."""
     lock = AioLock() if use_lock else None
     connect_args = {"lock": lock} if use_lock else {}
-    engine = create_async_engine(
-        "rqlite+aiorqlite://localhost:4001", connect_args=connect_args
-    )
+    engine = create_async_engine("rqlite+aiorqlite://localhost:4001", connect_args=connect_args)
     session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_local() as session:
         # Find and update Bob's age
-        result = await session.execute(
-            select(User).where(User.name == "Bob")
-        )
+        result = await session.execute(select(User).where(User.name == "Bob"))
         bob = result.scalar_one_or_none()
         if bob:
             bob.age = 30
@@ -176,15 +167,11 @@ async def delete_user(use_lock: bool = False):
     """Delete a user."""
     lock = AioLock() if use_lock else None
     connect_args = {"lock": lock} if use_lock else {}
-    engine = create_async_engine(
-        "rqlite+aiorqlite://localhost:4001", connect_args=connect_args
-    )
+    engine = create_async_engine("rqlite+aiorqlite://localhost:4001", connect_args=connect_args)
     session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_local() as session:
-        result = await session.execute(
-            select(User).where(User.name == "Charlie")
-        )
+        result = await session.execute(select(User).where(User.name == "Charlie"))
         charlie = result.scalar_one_or_none()
         if charlie:
             await session.delete(charlie)
@@ -199,16 +186,13 @@ async def bulk_operations(use_lock: bool = False):
     """Demonstrate bulk operations with transactions."""
     lock = AioLock() if use_lock else None
     connect_args = {"lock": lock} if use_lock else {}
-    engine = create_async_engine(
-        "rqlite+aiorqlite://localhost:4001", connect_args=connect_args
-    )
+    engine = create_async_engine("rqlite+aiorqlite://localhost:4001", connect_args=connect_args)
     session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_local() as session:
         # Bulk insert - all statements queued until commit
         users = [
-            User(name=f"User{i}", email=f"user{i}@example.com", age=20 + i)
-            for i in range(5, 10)
+            User(name=f"User{i}", email=f"user{i}@example.com", age=20 + i) for i in range(5, 10)
         ]
 
         session.add_all(users)
@@ -231,9 +215,7 @@ async def complex_workflow(use_lock: bool = False):
     """Complex ORM workflow: create, select, update, delete with various query patterns."""
     lock = AioLock() if use_lock else None
     connect_args = {"lock": lock} if use_lock else {}
-    engine = create_async_engine(
-        "rqlite+aiorqlite://localhost:4001", connect_args=connect_args
-    )
+    engine = create_async_engine("rqlite+aiorqlite://localhost:4001", connect_args=connect_args)
     session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_local() as session:
@@ -252,9 +234,7 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 2: SELECT MANY - Get all users ordered by age
         print("\n[STEP 2] SELECT MANY: All users ordered by age")
-        result = await session.execute(
-            select(User).order_by(User.age.asc())
-        )
+        result = await session.execute(select(User).order_by(User.age.asc()))
         all_users = result.scalars().all()
         for user in all_users:
             print(f"  {user.id}: {user.name}, age {user.age}")
@@ -263,9 +243,7 @@ async def complex_workflow(use_lock: bool = False):
         # Step 3: SELECT FEW - Filter users by age range
         print("\n[STEP 3] SELECT FEW: Users aged 30-40")
         result = await session.execute(
-            select(User).where(
-                User.age >= 30, User.age <= 40
-            ).order_by(User.name)
+            select(User).where(User.age >= 30, User.age <= 40).order_by(User.name)
         )
         filtered_users = result.scalars().all()
         for user in filtered_users:
@@ -274,9 +252,7 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 4: SELECT ONE - Get specific user by email
         print("\n[STEP 4] SELECT ONE: Find Grace by email")
-        result = await session.execute(
-            select(User).where(User.email == "grace@test.com")
-        )
+        result = await session.execute(select(User).where(User.email == "grace@test.com"))
         grace = result.scalar_one_or_none()
         if grace:
             print(f"  Found: {grace.name} ({grace.email}), age {grace.age}")
@@ -286,19 +262,15 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 5: UPDATE - Modify multiple users
         print("\n[STEP 5] UPDATE: Age up Emma and Frank by 2 years")
-        result = await session.execute(
-            select(User).where(User.name == "Emma")
-        )
+        result = await session.execute(select(User).where(User.name == "Emma"))
         emma = result.scalar_one_or_none()
-        result = await session.execute(
-            select(User).where(User.name == "Frank")
-        )
+        result = await session.execute(select(User).where(User.name == "Frank"))
         frank = result.scalar_one_or_none()
 
-        if emma:
+        if emma and emma.age is not None:
             emma.age += 2
             print(f"  Emma: {emma.age - 2} → {emma.age}")
-        if frank:
+        if frank and frank.age is not None:
             frank.age += 2
             print(f"  Frank: {frank.age - 2} → {frank.age}")
         await session.commit()
@@ -306,9 +278,7 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 6: SELECT ONE (verify update)
         print("\n[STEP 6] SELECT ONE: Verify Emma's updated age")
-        result = await session.execute(
-            select(User).where(User.name == "Emma")
-        )
+        result = await session.execute(select(User).where(User.name == "Emma"))
         emma_updated = result.scalar_one_or_none()
         if emma_updated:
             print(f"  Emma is now {emma_updated.age} years old")
@@ -316,9 +286,7 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 7: DELETE - Remove users under 30
         print("\n[STEP 7] DELETE: Remove users under 30")
-        result = await session.execute(
-            select(User).where(User.age < 30)
-        )
+        result = await session.execute(select(User).where(User.age < 30))
         young_users = result.scalars().all()
         deleted_names = [u.name for u in young_users]
         for user in young_users:
@@ -329,9 +297,7 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 8: SELECT MANY (final state)
         print("\n[STEP 8] SELECT MANY: Final user list")
-        result = await session.execute(
-            select(User).order_by(User.age.desc())
-        )
+        result = await session.execute(select(User).order_by(User.age.desc()))
         remaining = result.scalars().all()
         for user in remaining:
             print(f"  {user.name}: age {user.age}")
@@ -339,9 +305,7 @@ async def complex_workflow(use_lock: bool = False):
 
         # Step 9: SELECT ONE (non-existent)
         print("\n[STEP 9] SELECT ONE: Query for deleted user (Ivy)")
-        result = await session.execute(
-            select(User).where(User.name == "Ivy")
-        )
+        result = await session.execute(select(User).where(User.name == "Ivy"))
         ivy = result.scalar_one_or_none()
         if ivy is None:
             print("  Ivy not found (successfully deleted)")
@@ -362,12 +326,10 @@ async def main():
 Examples:
   uv run python -B examples/async_aio_lock_sqlalchemy_orm.py              # Without lock (shows warnings)
   uv run python -B examples/async_aio_lock_sqlalchemy_orm.py --with-lock  # With lock (no warnings)
-        """
+        """,
     )
     parser.add_argument(
-        "--with-lock",
-        action="store_true",
-        help="Use AioLock to suppress transaction warnings"
+        "--with-lock", action="store_true", help="Use AioLock to suppress transaction warnings"
     )
     args = parser.parse_args()
 
@@ -395,6 +357,7 @@ Examples:
         print(f"\n✗ Error: {e}")
         print("Make sure rqlite is running on localhost:4001")
         import traceback
+
         traceback.print_exc()
 
 

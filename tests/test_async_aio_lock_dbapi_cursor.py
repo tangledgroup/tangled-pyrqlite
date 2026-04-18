@@ -28,7 +28,7 @@ class TestAsyncAioLockCursorBasic:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_rowcount_initial(self):
         """Test rowcount initial value."""
@@ -40,7 +40,7 @@ class TestAsyncAioLockCursorBasic:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_arraysize_default(self):
         """Test default arraysize."""
@@ -52,7 +52,7 @@ class TestAsyncAioLockCursorBasic:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_arraysize_setter(self):
         """Test setting arraysize."""
@@ -65,7 +65,7 @@ class TestAsyncAioLockCursorBasic:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorExecute:
@@ -88,7 +88,7 @@ class TestAsyncAioLockCursorExecute:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_execute_insert_positional(self):
         """Test INSERT with positional parameters."""
@@ -123,7 +123,7 @@ class TestAsyncAioLockCursorExecute:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_execute_insert_named(self):
         """Test INSERT with named parameters."""
@@ -148,7 +148,9 @@ class TestAsyncAioLockCursorExecute:
             )
             await conn.commit()
 
-            await cursor.execute("SELECT * FROM async_users_named WHERE name=:name", {"name": "Bob"})
+            await cursor.execute(
+                "SELECT * FROM async_users_named WHERE name=:name", {"name": "Bob"}
+            )
             row = cursor.fetchone()
             assert row is not None
             assert row[1] == "Bob"
@@ -156,7 +158,7 @@ class TestAsyncAioLockCursorExecute:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_execute_select(self):
         """Test SELECT query."""
@@ -189,7 +191,7 @@ class TestAsyncAioLockCursorExecute:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_execute_update(self):
         """Test UPDATE statement."""
@@ -219,12 +221,13 @@ class TestAsyncAioLockCursorExecute:
 
             await cursor.execute("SELECT age FROM async_users_upd WHERE name=?", ("David",))
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 30
 
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_execute_delete(self):
         """Test DELETE statement."""
@@ -254,12 +257,13 @@ class TestAsyncAioLockCursorExecute:
 
             await cursor.execute("SELECT COUNT(*) FROM async_users_del")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 0
 
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorFetch:
@@ -295,7 +299,7 @@ class TestAsyncAioLockCursorFetch:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_fetchmany(self):
         """Test fetchmany()."""
@@ -329,7 +333,7 @@ class TestAsyncAioLockCursorFetch:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_fetchall(self):
         """Test fetchall()."""
@@ -359,7 +363,7 @@ class TestAsyncAioLockCursorFetch:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
     def test_async_iteration(self):
         """Test cursor iteration."""
@@ -389,7 +393,7 @@ class TestAsyncAioLockCursorFetch:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorDescription:
@@ -422,7 +426,7 @@ class TestAsyncAioLockCursorDescription:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorRowcount:
@@ -454,7 +458,7 @@ class TestAsyncAioLockCursorRowcount:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorExecutemany:
@@ -491,12 +495,13 @@ class TestAsyncAioLockCursorExecutemany:
 
             await cursor.execute("SELECT COUNT(*) FROM async_users_em")
             row = cursor.fetchone()
+            assert row is not None
             assert row[0] == 3
 
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorClose:
@@ -511,7 +516,7 @@ class TestAsyncAioLockCursorClose:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockComplexCursorWorkflow:
@@ -557,7 +562,7 @@ class TestAsyncAioLockComplexCursorWorkflow:
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncAioLockCursorEmptyResults:
@@ -582,9 +587,7 @@ class TestAsyncAioLockCursorEmptyResults:
             """)
             await conn.commit()
 
-            await cursor.execute(
-                "INSERT INTO async_empty_result (name) VALUES (?)", ("exists",)
-            )
+            await cursor.execute("INSERT INTO async_empty_result (name) VALUES (?)", ("exists",))
             await conn.commit()
 
             with warnings.catch_warnings(record=True) as w:
@@ -595,12 +598,10 @@ class TestAsyncAioLockCursorEmptyResults:
                 )
                 result = cursor.fetchone()
                 assert result is None
-                our_warnings = [
-                    x for x in w if "No results to fetch" in str(x.message)
-                ]
+                our_warnings = [x for x in w if "No results to fetch" in str(x.message)]
                 assert len(our_warnings) == 0
 
             await cursor.close()
 
         asyncio.run(_test())
-        conn.close()
+        conn.close()  # ty: ignore[unused-awaitable]

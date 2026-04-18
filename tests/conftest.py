@@ -1,6 +1,5 @@
 """Pytest fixtures for rqlite tests."""
 
-
 import pytest
 
 import rqlite
