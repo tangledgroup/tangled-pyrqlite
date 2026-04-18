@@ -134,11 +134,14 @@ __all__ = [
     # Redis distributed locks (lazy import)
     "RedisLock",
     "AioRedisLock",
+    # Valkey distributed locks (lazy import)
+    "ValkeyLock",
+    "AioValkeyLock",
 ]
 
 
 def __getattr__(name: str) -> Any:
-    """Lazy import for optional redis-dependent classes."""
+    """Lazy import for optional redis/valkey-dependent classes."""
     if name == "RedisLock":
         from .redis_lock import RedisLock as _RedisLock
 
@@ -147,6 +150,14 @@ def __getattr__(name: str) -> Any:
         from .async_redis_lock import AioRedisLock as _AioRedisLock
 
         return _AioRedisLock
+    if name == "ValkeyLock":
+        from .valkey_lock import ValkeyLock as _ValkeyLock
+
+        return _ValkeyLock
+    if name == "AioValkeyLock":
+        from .async_valkey_lock import AioValkeyLock as _AioValkeyLock
+
+        return _AioValkeyLock
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __version__ = "0.1.0"

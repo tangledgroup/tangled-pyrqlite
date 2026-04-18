@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.3 - 2026-04-18
+
+### Added
+
+- **Valkey distributed locks** (`ValkeyLock` sync, `AioValkeyLock` async) — wraps valkey-py's `valkey.lock.Lock` and `valkey.asyncio.lock.Lock` for cross-process transaction serialization. Requires optional `[valkey]` extra.
+- Sync and async usage examples for Valkey locks (`examples/valkey_lock_sync.py`, `examples/valkey_lock_async.py`).
+
 ## v0.1.2 - 2026-04-18
 
 ### Added

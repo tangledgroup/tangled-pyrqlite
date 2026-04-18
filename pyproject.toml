@@ -1,6 +1,6 @@
 [project]
 name = "tangled-pyrqlite"
-version = "0.1.2"
+version = "0.1.3"
 description = "DB-API 2.0 client and SQLAlchemy dialect for rqlite distributed SQLite clusters"
 authors = [
     { name = "Tangled", email = "noreply@tangledgroup.com" },
@@ -39,7 +39,8 @@ rqlite = "rqlite.sqlalchemy.dialect:RQLiteDialect"
 "rqlite.aiorqlite" = "rqlite.sqlalchemy.async_dialect:AioRQLiteDialect"
 
 [project.optional-dependencies]
-redis = ["redis>=4.0"]
+redis = ["redis>=7.4.0"]
+valkey = ["valkey>=6.1.1"]
 
 [dependency-groups]
 dev = [
@@ -47,6 +48,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=7.1.0",
     "redis>=7.4.0",
+    "valkey>=6.1.1",
     "ruff>=0.15.10",
     "ty>=0.0.29",
 ]
