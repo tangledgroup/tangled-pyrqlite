@@ -276,7 +276,7 @@ class AioRQLiteDBAPIConnectionAdapter(AsyncAdapt_terminate, AdaptedConnection):
     """
 
     await_ = staticmethod(await_only)
-    __slots__ = ("dbapi",)
+    __slots__ = ("dbapi", "_connection")
 
     def __init__(self, dbapi: Any, connection: AsyncConnection) -> None:
         """Initialize the connection adapter.
@@ -286,7 +286,7 @@ class AioRQLiteDBAPIConnectionAdapter(AsyncAdapt_terminate, AdaptedConnection):
             connection: The underlying rqlite AsyncConnection.
         """
         self.dbapi = dbapi  # type: ignore[assignment]
-        self._connection = connection  # type: ignore[assignment]
+        self._connection = connection  # type: ignore[assignment,invalid-assignment]
 
     @property
     def isolation_level(self) -> str | None:
@@ -413,13 +413,13 @@ class AioRQLiteDBAPI(AsyncAdapt_dbapi_module):
     def _init_dbapi_attributes(self) -> None:
         """Set up DB-API 2.0 required attributes from rqlite exceptions."""
         # Exception hierarchy (DB-API 2.0)
-        self.Error = Error
-        self.DatabaseError = DatabaseError
-        self.OperationalError = OperationalError
-        self.IntegrityError = IntegrityError
-        self.ProgrammingError = ProgrammingError
-        self.InterfaceError = InterfaceError
-        self.NotSupportedError = NotSupportedError
+        self.Error = Error  # type: ignore[assignment,invalid-assignment]
+        self.DatabaseError = DatabaseError  # type: ignore[assignment,invalid-assignment]
+        self.OperationalError = OperationalError  # type: ignore[assignment,invalid-assignment]
+        self.IntegrityError = IntegrityError  # type: ignore[assignment,invalid-assignment]
+        self.ProgrammingError = ProgrammingError  # type: ignore[assignment,invalid-assignment]
+        self.InterfaceError = InterfaceError  # type: ignore[assignment,invalid-assignment]
+        self.NotSupportedError = NotSupportedError  # type: ignore[assignment,invalid-assignment]
 
         # SQLite compatibility (required by SQLAlchemy SQLite dialect base)
         self.sqlite_version_info = (3, 45, 0)
@@ -477,7 +477,7 @@ class AioRQLiteExecutionContext(SQLiteExecutionContext):
             if "SELECT" in stmt_str and (self.isinsert or self.isupdate or self.isdelete):
                 # Check if connection has a lock (suppress warning if present)
                 has_lock = False
-                if self.dialect._lock:  # type: ignore[attr-defined]
+                if getattr(self.dialect, "_lock", None):  # type: ignore[unresolved-attribute]
                     has_lock = True
                 elif self.connection:
                     dbapi_conn = getattr(self.connection, "connection", None)
@@ -601,7 +601,7 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
         e: Exception,
         connection: SAConnection | None = None,
         cursor: DBAPICursor | None = None,
-    ) -> bool:
+    ) -> bool:  # type: ignore[invalid-method-override]
         """Detect disconnection errors.
 
         rqlite raises OperationalError with 'no active connection' message
@@ -617,7 +617,7 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
         """
         if isinstance(e, OperationalError) and "no active connection" in str(e):
             return True
-        return super().is_disconnect(e, connection, cursor)
+        return super().is_disconnect(e, connection, cursor)  # type: ignore[arg-type,invalid-argument-type]
 
     def do_terminate(self, dbapi_connection: SAConnection) -> None:
         """Force-terminate a connection.
@@ -678,7 +678,7 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
         self._lock: AsyncLockProtocol | None = lock
 
     @classmethod
-    def import_dbapi(cls) -> AioRQLiteDBAPI:  # type: ignore[override]
+    def import_dbapi(cls) -> AioRQLiteDBAPI:  # type: ignore[invalid-method-override]
         """Import the async DBAPI module.
 
         Returns:
@@ -740,7 +740,7 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
 
         return ([], kwargs)
 
-    def connect(  # type: ignore[override]
+    def connect(  # type: ignore[invalid-method-override]
         self, *args: Any, **kwargs: Any
     ) -> AioRQLiteDBAPIConnectionAdapter:
         """Create a new DB-API async connection.
@@ -802,21 +802,15 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
         else:
             cursor.execute(statement)
 
-    def do_commit(  # type: ignore[override,reportInvalidTypeForm]
-        self, connection
-    ) -> None:
+    def do_commit(self, connection) -> None:  # type: ignore[invalid-method-override]
         """Commit the current transaction."""
         connection.commit()
 
-    def do_rollback(  # type: ignore[override,reportInvalidTypeForm]
-        self, connection
-    ) -> None:
+    def do_rollback(self, connection) -> None:  # type: ignore[invalid-method-override]
         """Rollback the current transaction."""
         connection.rollback()
 
-    def do_begin(  # type: ignore[override,reportInvalidTypeForm]
-        self, connection
-    ) -> None:
+    def do_begin(self, connection) -> None:  # type: ignore[invalid-method-override]
         """Begin a transaction.
 
         Note: In rqlite, transactions are implicit - statements are queued
@@ -1019,7 +1013,7 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
         except Exception:
             return []
 
-    def get_table_names(  # type: ignore[override]
+    def get_table_names(  # type: ignore[invalid-method-override]
         self, connection, schema=None, **kw
     ):
         """Get list of table names.
@@ -1045,7 +1039,7 @@ class AioRQLiteDialect(SQLiteDialect_pysqlite):
         except Exception:
             return []
 
-    def get_view_names(  # type: ignore[override]
+    def get_view_names(  # type: ignore[invalid-method-override]
         self, connection, schema=None, **kw
     ):
         """Get list of view names.

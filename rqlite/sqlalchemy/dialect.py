@@ -99,7 +99,7 @@ class RQLiteExecutionContext(SQLiteExecutionContext):
             if "SELECT" in stmt_str and (self.isinsert or self.isupdate or self.isdelete):
                 # Check if connection has a lock (suppress warning if present)
                 has_lock = False
-                if self.dialect._lock:
+                if getattr(self.dialect, "_lock", None):  # type: ignore[unresolved-attribute]
                     has_lock = True
                 elif self.connection:
                     # Check if dbapi_connection has _lock attribute
@@ -378,15 +378,15 @@ class RQLiteDialect(SQLiteDialect):
         else:
             cursor.execute(statement)
 
-    def do_commit(self, connection) -> None:  # type: ignore[reportInvalidTypeForm]
+    def do_commit(self, connection) -> None:  # type: ignore[invalid-method-override]
         """Commit the current transaction."""
         connection.commit()
 
-    def do_rollback(self, connection) -> None:  # type: ignore[reportInvalidTypeForm]
+    def do_rollback(self, connection) -> None:  # type: ignore[invalid-method-override]
         """Rollback the current transaction."""
         connection.rollback()
 
-    def do_begin(self, connection) -> None:  # type: ignore[reportInvalidTypeForm]
+    def do_begin(self, connection) -> None:  # type: ignore[invalid-method-override]
         """Begin a transaction.
 
         Note: In rqlite, transactions are implicit - statements are queued

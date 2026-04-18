@@ -69,14 +69,14 @@ class TestSyncThreadLockWithThreadingLock:
 
     def test_sync_thread_lock_connection_with_threading_lock(self):
         """Test connection can be created with threading.Lock."""
-        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())  # ty: ignore[invalid-argument-type]
+        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())
         assert conn._lock is not None
         assert isinstance(conn._lock, LockProtocol)
         conn.close()
 
     def test_sync_thread_lock_cursor_inherits_threading_lock(self):
         """Test cursor inherits threading.Lock from connection."""
-        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())  # ty: ignore[invalid-argument-type]
+        conn = rqlite.connect(host="localhost", port=4001, lock=threading.Lock())
         cursor = conn.cursor()
         assert cursor._lock is not None
         assert isinstance(cursor._lock, LockProtocol)
@@ -505,7 +505,7 @@ class TestSyncThreadLockIntegration:
     def test_sync_thread_lock_full_workflow_with_threading_lock(self):
         """Test complete CRUD workflow with threading.Lock."""
         lock = threading.Lock()
-        conn = rqlite.connect(host="localhost", port=4001, lock=lock)  # ty: ignore[invalid-argument-type]
+        conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
         try:

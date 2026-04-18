@@ -113,7 +113,7 @@ class TestSyncThreadLockConnectionReadConsistency:
     def test_invalid_consistency_string_raises_error(self):
         """Test that invalid consistency string raises ValueError."""
         with pytest.raises(ValueError, match="Invalid read_consistency"):
-            rqlite.connect(host="localhost", port=4001, read_consistency="invalid")  # ty: ignore[invalid-argument-type]
+            rqlite.connect(host="localhost", port=4001, read_consistency="invalid")
 
 
 class TestSyncThreadLockCursorReadConsistency:

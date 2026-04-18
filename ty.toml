@@ -1,0 +1,8 @@
+[rules."invalid-method-override"]
+ignore = {}
+
+[rules."invalid-assignment"]
+ignore = {}
+
+[rules."invalid-argument-type"]
+ignore = {}

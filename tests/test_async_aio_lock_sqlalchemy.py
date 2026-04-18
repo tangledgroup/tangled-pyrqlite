@@ -28,7 +28,7 @@ def run_async(coro):
 
 def _create_tables_sync(conn, metadata):
     """Synchronous table creation callable for run_sync."""
-    metadata.create_all(conn)  # ty: ignore[invalid-argument-type]
+    metadata.create_all(conn)
 
 
 @pytest.fixture(scope="function")
@@ -42,8 +42,9 @@ class TestAsyncSQLAlchemyCore:
 
     def test_async_create_tables(self):
         """Test creating tables via async SQLAlchemy."""
-        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+        from rqlite import AioLock
 
         class Base(DeclarativeBase):
             pass
@@ -80,8 +81,9 @@ class TestAsyncSQLAlchemyORM:
 
     def test_async_session_add_commit(self):
         """Test adding and committing objects via async Session."""
-        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+        from rqlite import AioLock
 
         class Base(DeclarativeBase):
             pass
@@ -115,8 +117,9 @@ class TestAsyncSQLAlchemyORM:
 
     def test_async_session_query(self):
         """Test querying objects via async Session."""
-        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+        from rqlite import AioLock
 
         class Base(DeclarativeBase):
             pass
@@ -166,8 +169,9 @@ class TestAsyncSQLAlchemyReadConsistency:
 
     def test_async_sqlalchemy_default_consistency(self):
         """Test that async SQLAlchemy uses LINEARIZABLE by default."""
-        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+        from rqlite import AioLock
 
         class Base(DeclarativeBase):
             pass

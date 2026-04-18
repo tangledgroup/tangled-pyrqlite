@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import threading
 from enum import Enum
+from types import TracebackType
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
 
@@ -102,8 +103,8 @@ class LockProtocol(Protocol):
         self,
         exc_type: type[Exception] | None,
         exc_val: Exception | None,
-        exc_tb: object,
-    ) -> None: ...
+        exc_tb: Any,
+    ) -> Any: ...
 
 
 # Type variable for lock implementations
@@ -244,7 +245,7 @@ class ThreadLock(Lock):
         self,
         exc_type: type[Exception] | None,
         exc_val: Exception | None,
-        exc_tb: object,
+        exc_tb: TracebackType | None,
     ) -> None:
         """Exit context manager.
 
@@ -253,7 +254,7 @@ class ThreadLock(Lock):
             exc_val: Exception instance if an exception occurred.
             exc_tb: Exception traceback if an exception occurred.
         """
-        self._lock.__exit__(exc_type, exc_val, exc_tb)
+        self._lock.__exit__(exc_type, exc_val, exc_tb)  # type: ignore[arg-type]
 
 
 def adapt_value(value: Any) -> Any:
