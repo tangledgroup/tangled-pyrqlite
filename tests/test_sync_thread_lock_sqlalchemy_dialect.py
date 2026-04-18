@@ -1,4 +1,4 @@
-"""Tests for SQLAlchemy dialect integration."""
+"""Tests for sync SQLAlchemy Core and ORM with ThreadLock."""
 
 
 import pytest
@@ -59,7 +59,7 @@ def tables(engine):
     Base.metadata.drop_all(engine)
 
 
-class TestSQLAlchemyCore:
+class TestSyncThreadLockSQLAlchemyCore:
     """Test SQLAlchemy Core operations."""
 
     def test_create_tables(self, engine):
@@ -134,7 +134,7 @@ class TestSQLAlchemyCore:
             assert row is None
 
 
-class TestSQLAlchemyORM:
+class TestSyncThreadLockSQLAlchemyORM:
     """Test SQLAlchemy ORM operations."""
 
     def test_session_add_commit(self, engine, tables):
@@ -196,7 +196,7 @@ class TestSQLAlchemyORM:
             assert order_result.user_id == user.id
 
 
-class TestSQLAlchemyReflection:
+class TestSyncThreadLockSQLAlchemyReflection:
     """Test SQLAlchemy reflection capabilities."""
 
     def test_has_table(self, engine, tables):
@@ -229,7 +229,7 @@ class TestSQLAlchemyReflection:
             assert "id" in pk["constrained_columns"]
 
 
-class TestSQLAlchemyConnectionURL:
+class TestSyncThreadLockSQLAlchemyConnectionURL:
     """Test connection URL parsing."""
 
     def test_basic_url(self):
@@ -245,7 +245,7 @@ class TestSQLAlchemyConnectionURL:
         assert engine.url.password == "pass"
 
 
-class TestComplexORMWorkflow:
+class TestSyncThreadLockComplexORMWorkflow:
     """Test complex ORM workflow with multiple CRUD operations."""
 
     def test_full_orm_lifecycle(self, engine, tables):
@@ -308,7 +308,7 @@ class TestComplexORMWorkflow:
             assert ivy is None
 
 
-class TestComplexDBAPIWorkflow:
+class TestSyncThreadLockComplexDBAPIWorkflow:
     """Test complex DB-API 2.0 workflow with raw cursor operations."""
 
     def test_full_dbapi_lifecycle(self, engine):

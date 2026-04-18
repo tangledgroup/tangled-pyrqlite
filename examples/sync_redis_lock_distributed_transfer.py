@@ -1,4 +1,4 @@
-"""Cross-process bank transfer demo — proves Redis lock serializes transactions.
+"""Cross-process bank transfer demo — proves SyncRedisLock serializes transactions.
 
 This example demonstrates that a distributed Redis lock provides true
 cross-process transaction serialization for rqlite. Without the lock,
@@ -19,13 +19,13 @@ Prerequisites:
 
 Usage:
     # Run without lock (shows race condition):
-    uv run python -B examples/distributed_transfer.py --no-lock
+    uv run python -B examples/sync_redis_lock_distributed_transfer.py --no-lock
 
     # Run with lock (proves serialization):
-    uv run python -B examples/distributed_transfer.py --with-lock
+    uv run python -B examples/sync_redis_lock_distributed_transfer.py --with-lock
 
     # Auto-demo both scenarios:
-    uv run python -B examples/distributed_transfer.py --all
+    uv run python -B examples/sync_redis_lock_distributed_transfer.py --all
 """
 
 from __future__ import annotations
@@ -209,9 +209,9 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run python -B examples/distributed_transfer.py --no-lock   # Show race condition
-  uv run python -B examples/distributed_transfer.py --with-lock  # Prove serialization
-  uv run python -B examples/distributed_transfer.py --all        # Run both scenarios
+  uv run python -B examples/sync_redis_lock_distributed_transfer.py --no-lock   # Show race condition
+  uv run python -B examples/sync_redis_lock_distributed_transfer.py --with-lock  # Prove serialization
+  uv run python -B examples/sync_redis_lock_distributed_transfer.py --all        # Run both scenarios
 
 Prerequisites:
   - Start Redis: podman run -d --name redis-test -p 6379:6379 docker.io/redis

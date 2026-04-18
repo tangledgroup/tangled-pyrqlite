@@ -1,4 +1,4 @@
-"""Tests for rqlite connection module."""
+"""Tests for sync DB-API 2.0 connection with ThreadLock."""
 
 
 import pytest
@@ -6,7 +6,7 @@ import pytest
 import rqlite
 
 
-class TestConnection:
+class TestSyncThreadLockConnection:
     """Test Connection class."""
 
     def test_connect(self, connection):
@@ -53,7 +53,7 @@ class TestConnection:
         connection.rollback()
 
 
-class TestConnectionAuthentication:
+class TestSyncThreadLockConnectionAuthentication:
     """Test connection with authentication."""
 
     def test_connect_with_auth(self):
@@ -70,7 +70,7 @@ class TestConnectionAuthentication:
         conn.close()
 
 
-class TestConnectionTimeout:
+class TestSyncThreadLockConnectionTimeout:
     """Test connection timeout settings."""
 
     def test_connect_with_timeout(self):
@@ -80,7 +80,7 @@ class TestConnectionTimeout:
         conn.close()
 
 
-class TestComplexConnectionWorkflow:
+class TestSyncThreadLockComplexConnectionWorkflow:
     """Test complex connection workflow with multiple operations."""
 
     def test_full_crud_lifecycle(self):

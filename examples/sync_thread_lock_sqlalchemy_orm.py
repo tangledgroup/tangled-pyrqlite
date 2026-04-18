@@ -13,10 +13,10 @@ Prerequisites:
 
 Usage:
     # Without lock (shows transaction warnings):
-    uv run python -B examples/sqlalchemy_orm.py
+    uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py
 
     # With lock (no transaction warnings):
-    uv run python -B examples/sqlalchemy_orm.py --with-lock
+    uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py --with-lock
 """
 
 from __future__ import annotations
@@ -269,12 +269,12 @@ def main():
     """Run all SQLAlchemy examples."""
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description="rqlite SQLAlchemy ORM examples",
+        description="rqlite Sync ThreadLock SQLAlchemy ORM examples",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run python -B examples/sqlalchemy_orm.py              # Without lock (shows warnings)
-  uv run python -B examples/sqlalchemy_orm.py --with-lock  # With lock (no warnings)
+  uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py              # Without lock (shows warnings)
+  uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py --with-lock  # With lock (no warnings)
         """
     )
     parser.add_argument(

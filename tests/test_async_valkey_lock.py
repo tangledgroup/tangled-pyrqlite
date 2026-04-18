@@ -44,11 +44,11 @@ def _cleanup_test_tables() -> None:
         conn = rqlite.connect(host="localhost", port=4001, lock=rqlite.ThreadLock())
         cursor = conn.cursor()
         for table in [
-            "valkey_async_test_balance",
-            "valkey_async_crud",
-            "valkey_async_accounts",
-            "valkey_async_context",
-            "valkey_async_basic",
+            "async_valkey_lock_test_balance",
+            "async_valkey_lock_crud",
+            "async_valkey_lock_accounts",
+            "async_valkey_lock_context",
+            "async_valkey_lock_basic",
         ]:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
         conn.commit()
@@ -68,17 +68,17 @@ def cleanup_after_valkey_test():
 # ── Unit Tests (no Valkey needed) ───────────────────────────────────────
 
 
-class TestAioValkeyLockUnit:
+class TestAsyncValkeyLockUnit:
     """Tests for AioValkeyLock creation and protocol compliance."""
 
-    def test_aio_valkey_lock_creation(self):
+    def test_async_valkey_lock_creation(self):
         """Test AioValkeyLock can be created with default params."""
         lock = AioValkeyLock(name="test")
         assert lock.name == "test"
         assert lock._key == "pyrqlite:lock:test"
         assert lock.timeout == 10.0
 
-    def test_aio_valkey_lock_custom_params(self):
+    def test_async_valkey_lock_custom_params(self):
         """Test AioValkeyLock with custom connection params."""
         lock = AioValkeyLock(
             name="custom",
@@ -91,25 +91,25 @@ class TestAioValkeyLockUnit:
         assert lock.host == "valkey.example.com"
         assert lock.port == 6380
 
-    def test_aio_valkey_lock_empty_name_raises(self):
+    def test_async_valkey_lock_empty_name_raises(self):
         """Test empty name raises ValueError."""
         with pytest.raises(ValueError, match="must not be empty"):
             AioValkeyLock(name="")
 
-    def test_aio_valkey_lock_zero_timeout_raises(self):
+    def test_async_valkey_lock_zero_timeout_raises(self):
         """Test zero timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout must be > 0"):
             AioValkeyLock(name="test", timeout=0)
 
-    def test_aio_valkey_lock_has_token(self):
+    def test_async_valkey_lock_has_token(self):
         """Test lock generates a unique token (via valkey-py Lock)."""
-        lock = AioValkeyLock(name="token_test")
+        lock = AioValkeyLock(name="sync_token_test")
         # Token is managed internally by valkey-py's async Lock
         assert lock._acquired is False
 
-    def test_aio_valkey_lock_satisfies_protocol(self):
+    def test_async_valkey_lock_satisfies_protocol(self):
         """Test AioValkeyLock satisfies AsyncLockProtocol."""
-        lock = AioValkeyLock(name="protocol_test")
+        lock = AioValkeyLock(name="sync_protocol_test")
         assert isinstance(lock, rqlite.AsyncLockProtocol)
 
 
@@ -117,12 +117,12 @@ class TestAioValkeyLockUnit:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestAioValkeyLockIntegration:
+class TestAsyncValkeyLockIntegration:
     """Tests for AioValkeyLock acquire/release with live Valkey."""
 
-    def test_acquire_release_async(self):
+    def test_async_valkey_lock_acquire_release(self):
         """Test basic async acquire and release cycle."""
-        lock = AioValkeyLock(name="async_integration_test", timeout=10.0)
+        lock = AioValkeyLock(name="async_lock_integration_test", timeout=10.0)
 
         async def _test():
             assert await lock.acquire() is True
@@ -132,10 +132,10 @@ class TestAioValkeyLockIntegration:
 
         asyncio.run(_test())
 
-    def test_acquire_timeout_non_blocking_async(self):
+    def test_async_valkey_lock_acquire_timeout_non_blocking(self):
         """Test non-blocking async acquire returns False when held."""
-        lock1 = AioValkeyLock(name="async_timeout_test", timeout=10.0)
-        lock2 = AioValkeyLock(name="async_timeout_test", timeout=10.0)
+        lock1 = AioValkeyLock(name="async_lock_timeout_test", timeout=10.0)
+        lock2 = AioValkeyLock(name="async_lock_timeout_test", timeout=10.0)
 
         async def _test():
             assert await lock1.acquire() is True
@@ -144,9 +144,9 @@ class TestAioValkeyLockIntegration:
 
         asyncio.run(_test())
 
-    def test_async_context_manager(self):
+    def test_async_valkey_lock_context_manager(self):
         """Test AioValkeyLock as async context manager."""
-        lock = AioValkeyLock(name="async_cm_test", timeout=10.0)
+        lock = AioValkeyLock(name="async_lock_cm_test", timeout=10.0)
 
         async def _test():
             async with lock:
@@ -155,9 +155,9 @@ class TestAioValkeyLockIntegration:
 
         asyncio.run(_test())
 
-    def test_double_release_safe_async(self):
+    def test_async_valkey_lock_double_release_safe(self):
         """Test releasing twice doesn't raise."""
-        lock = AioValkeyLock(name="async_double_release_test", timeout=10.0)
+        lock = AioValkeyLock(name="async_lock_double_release_test", timeout=10.0)
 
         async def _test():
             await lock.acquire()
@@ -171,10 +171,10 @@ class TestAioValkeyLockIntegration:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestDistributedSerialization:
+class TestAsyncValkeyLockDistributedSerialization:
     """Tests proving AioValkeyLock serializes cross-process transactions."""
 
-    def test_distributed_serialization_async(self):
+    def test_async_valkey_lock_distributed_serialization(self):
         """Two async tasks with AioValkeyLock produce correct final balance."""
         import rqlite
 
@@ -200,7 +200,7 @@ class TestDistributedSerialization:
             cursor.close()
             conn.close()
 
-        lock = AioValkeyLock(name="async_distributed_test", timeout=30.0)
+        lock = AioValkeyLock(name="async_lock_distributed_test", timeout=30.0)
         iterations = 20
         amount = 50.0
         expected_final = initial - (iterations * amount)
@@ -246,12 +246,12 @@ class TestDistributedSerialization:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestAioValkeyLockWithAsyncConnection:
+class TestAsyncValkeyLockWithAsyncConnection:
     """Test AioValkeyLock with async rqlite connection."""
 
-    def test_async_lock_with_async_connection(self):
+    def test_async_valkey_lock_with_async_connection(self):
         """Use AioValkeyLock with async_connect — full CRUD workflow."""
-        lock = AioValkeyLock(name="async_crud_test", timeout=10.0)
+        lock = AioValkeyLock(name="async_lock_crud_test", timeout=10.0)
         conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
 
         async def _run():
@@ -303,9 +303,9 @@ class TestAioValkeyLockWithAsyncConnection:
 
         asyncio.run(_run())
 
-    def test_async_lock_suppresses_warnings(self):
+    def test_async_valkey_lock_suppresses_warnings(self):
         """Test AioValkeyLock suppresses transaction SQL warnings."""
-        lock = AioValkeyLock(name="async_warning_test", timeout=10.0)
+        lock = AioValkeyLock(name="async_lock_warning_test", timeout=10.0)
         conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
 
         async def _run():

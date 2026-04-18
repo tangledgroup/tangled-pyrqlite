@@ -1,10 +1,10 @@
-"""Tests for rqlite cursor module."""
+"""Tests for sync DB-API 2.0 cursor with ThreadLock."""
 
 
 import pytest
 
 
-class TestCursorBasic:
+class TestSyncThreadLockCursorBasic:
     """Test basic cursor operations."""
 
     def test_description_attribute(self, cursor):
@@ -25,7 +25,7 @@ class TestCursorBasic:
         assert cursor.arraysize == 10
 
 
-class TestCursorExecute:
+class TestSyncThreadLockCursorExecute:
     """Test cursor execute operations."""
 
     def test_execute_create_table(self, cursor):
@@ -124,7 +124,7 @@ class TestCursorExecute:
         cursor.connection.commit()
 
 
-class TestCursorFetch:
+class TestSyncThreadLockCursorFetch:
     """Test cursor fetch operations."""
 
     def test_fetchone(self, users_table, cursor):
@@ -186,7 +186,7 @@ class TestCursorFetch:
         assert len(names) == 3
 
 
-class TestCursorDescription:
+class TestSyncThreadLockCursorDescription:
     """Test cursor description attribute."""
 
     def test_description_after_select(self, users_table, cursor):
@@ -210,7 +210,7 @@ class TestCursorDescription:
         assert cursor.description is None
 
 
-class TestCursorRowcount:
+class TestSyncThreadLockCursorRowcount:
     """Test cursor rowcount attribute."""
 
     def test_rowcount_after_insert(self, users_table, cursor):
@@ -234,7 +234,7 @@ class TestCursorRowcount:
         assert cursor.rowcount == -1
 
 
-class TestCursorLastrowid:
+class TestSyncThreadLockCursorLastrowid:
     """Test cursor lastrowid attribute."""
 
     def test_lastrowid_after_insert(self, users_table, cursor):
@@ -249,7 +249,7 @@ class TestCursorLastrowid:
         assert isinstance(cursor.lastrowid, int)
 
 
-class TestCursorExecutemany:
+class TestSyncThreadLockCursorExecutemany:
     """Test executemany() method."""
 
     def test_executemany_positional(self, users_table, cursor):
@@ -288,7 +288,7 @@ class TestCursorExecutemany:
         assert row[0] == 2
 
 
-class TestCursorClose:
+class TestSyncThreadLockCursorClose:
     """Test cursor close method."""
 
     def test_close_cursor(self, cursor):
@@ -306,7 +306,7 @@ class TestCursorClose:
         cursor.close()  # Should not raise
 
 
-class TestComplexCursorWorkflow:
+class TestSyncThreadLockComplexCursorWorkflow:
     """Test complex cursor operations with multiple query patterns."""
 
     def test_comprehensive_crud_workflow(self, cursor):

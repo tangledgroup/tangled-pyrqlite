@@ -1,7 +1,7 @@
-"""Async DB-API 2.0 examples for rqlite.
+"""Basic usage examples for rqlite DB-API 2.0 client.
 
-This module demonstrates how to use the async DB-API 2.0 client for rqlite.
-All examples use async/await patterns and demonstrate common database operations.
+This example demonstrates fundamental CRUD operations using the rqlite
+DB-API 2.0 compliant client.
 
 Prerequisites:
     - rqlite server running on localhost:4001
@@ -14,98 +14,97 @@ Prerequisites:
 
 Usage:
     # Without lock (shows transaction warnings):
-    uv run python -B examples/async_basic_usage.py
+    uv run python -B examples/sync_thread_lock_basic_usage.py
 
     # With lock (no transaction warnings):
-    uv run python -B examples/async_basic_usage.py --with-lock
+    uv run python -B examples/sync_thread_lock_basic_usage.py --with-lock
 """
 
 from __future__ import annotations
 
 import argparse
-import asyncio
 import functools
 from collections.abc import Callable
 from typing import Any
 
 import rqlite
-from rqlite import AioLock
+from rqlite import ThreadLock  # sync thread lock
 
 
 def print_docstring(func: Callable) -> Callable:
     """Decorator that prints the function's docstring when called."""
     @functools.wraps(func)
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         if func.__doc__:
             print(f"\n{'─' * 60}")
             print(f"📝 {func.__name__}: {func.__doc__.strip()}")
             print("─" * 60)
-        return await func(*args, **kwargs)
-
+        return func(*args, **kwargs)
     return wrapper
 
 
 @print_docstring
-async def create_table(use_lock: bool = False) -> None:
+def create_table(use_lock: bool = False):
     """Create a table."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    cursor = await conn.cursor()
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(host="localhost", port=4001, lock=lock)
+    cursor = conn.cursor()
 
     # Drop existing table for clean demo
-    await cursor.execute("DROP TABLE IF EXISTS async_users")
+    cursor.execute("DROP TABLE IF EXISTS users")
 
     # Create new table
-    await cursor.execute("""
-        CREATE TABLE async_users (
+    cursor.execute("""
+        CREATE TABLE users (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             email TEXT UNIQUE,
             age INTEGER
         )
     """)
-    await conn.commit()
-    print("✓ Table 'async_users' created")
 
-    await cursor.close()
-    await conn.close()
+    conn.commit()
+    print("✓ Table 'users' created")
+
+    cursor.close()
+    conn.close()
 
 
 @print_docstring
-async def insert_data(use_lock: bool = False) -> None:
+def insert_data(use_lock: bool = False):
     """Insert data into the table."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    cursor = await conn.cursor()
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(lock=lock)
+    cursor = conn.cursor()
 
     # Insert single row with positional parameters (?)
-    await cursor.execute(
-        "INSERT INTO async_users (name, email, age) VALUES (?, ?, ?)",
+    cursor.execute(
+        "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
         ("Alice", "alice@example.com", 30),
     )
 
     # Insert with named parameters (:name)
-    await cursor.execute(
-        "INSERT INTO async_users (name, email, age) VALUES (:name, :email, :age)",
+    cursor.execute(
+        "INSERT INTO users (name, email, age) VALUES (:name, :email, :age)",
         {"name": "Bob", "email": "bob@example.com", "age": 25},
     )
 
-    await conn.commit()
+    conn.commit()
     print(f"✓ Inserted {cursor.rowcount} row(s)")
 
-    await cursor.close()
-    await conn.close()
+    cursor.close()
+    conn.close()
 
 
 @print_docstring
-async def query_data(use_lock: bool = False) -> None:
+def query_data(use_lock: bool = False):
     """Query data from the table."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    cursor = await conn.cursor()
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(lock=lock)
+    cursor = conn.cursor()
 
     # Select all users
-    await cursor.execute("SELECT * FROM async_users")
+    cursor.execute("SELECT * FROM users")
 
     print("\nAll users:")
     print("-" * 60)
@@ -114,55 +113,55 @@ async def query_data(use_lock: bool = False) -> None:
 
     # Select specific user
     print("\nUser named Alice:")
-    await cursor.execute("SELECT * FROM async_users WHERE name=?", ("Alice",))
+    cursor.execute("SELECT * FROM users WHERE name=?", ("Alice",))
     row = cursor.fetchone()
     if row:
         print(f"  Found: {row}")
 
-    await cursor.close()
-    await conn.close()
+    cursor.close()
+    conn.close()
 
 
 @print_docstring
-async def update_data(use_lock: bool = False) -> None:
+def update_data(use_lock: bool = False):
     """Update existing data."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    cursor = await conn.cursor()
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(lock=lock)
+    cursor = conn.cursor()
 
     # Update Bob's age
-    await cursor.execute("UPDATE async_users SET age=? WHERE name=?", (30, "Bob"))
-    await conn.commit()
+    cursor.execute("UPDATE users SET age=? WHERE name=?", (30, "Bob"))
+    conn.commit()
 
     print(f"✓ Updated {cursor.rowcount} row(s)")
 
-    await cursor.close()
-    await conn.close()
+    cursor.close()
+    conn.close()
 
 
 @print_docstring
-async def delete_data(use_lock: bool = False) -> None:
+def delete_data(use_lock: bool = False):
     """Delete data from the table."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    cursor = await conn.cursor()
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(lock=lock)
+    cursor = conn.cursor()
 
     # Delete Alice
-    await cursor.execute("DELETE FROM async_users WHERE name=?", ("Alice",))
-    await conn.commit()
+    cursor.execute("DELETE FROM users WHERE name=?", ("Alice",))
+    conn.commit()
 
     print(f"✓ Deleted {cursor.rowcount} row(s)")
 
-    await cursor.close()
-    await conn.close()
+    cursor.close()
+    conn.close()
 
 
 @print_docstring
-async def batch_insert(use_lock: bool = False) -> None:
+def batch_insert(use_lock: bool = False):
     """Insert multiple rows efficiently."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    cursor = await conn.cursor()
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(lock=lock)
+    cursor = conn.cursor()
 
     # Using executemany for multiple inserts
     users = [
@@ -171,27 +170,26 @@ async def batch_insert(use_lock: bool = False) -> None:
         ("Eve", "eve@example.com", 32),
     ]
 
-    await cursor.executemany(
-        "INSERT INTO async_users (name, email, age) VALUES (?, ?, ?)",
+    cursor.executemany(
+        "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
         users,
     )
-    await conn.commit()
+    conn.commit()
 
     print(f"✓ Inserted {len(users)} users")
 
-    await cursor.close()
-    await conn.close()
+    cursor.close()
+    conn.close()
 
 
 @print_docstring
-async def context_manager_example(use_lock: bool = False) -> None:
+def context_manager_example(use_lock: bool = False):
     """Using context managers for automatic resource cleanup."""
     # Connection as context manager
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
-    async with conn:
-        async with await conn.cursor() as cursor:
-            await cursor.execute("SELECT COUNT(*) FROM async_users")
+    lock = ThreadLock() if use_lock else None
+    with rqlite.connect(lock=lock) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM users")
             count = cursor.fetchone()[0]
             print(f"✓ Total users: {count}")
 
@@ -199,19 +197,19 @@ async def context_manager_example(use_lock: bool = False) -> None:
 
 
 @print_docstring
-async def complex_workflow(use_lock: bool = False) -> None:
+def complex_workflow(use_lock: bool = False):
     """Complex workflow: comprehensive CRUD operations with multiple query patterns."""
-    lock = AioLock() if use_lock else None
-    conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
+    lock = ThreadLock() if use_lock else None
+    conn = rqlite.connect(host="localhost", port=4001, lock=lock)
 
     try:
-        cursor = await conn.cursor()
+        cursor = conn.cursor()
 
         # Step 1: CREATE TABLE
         print("\n[STEP 1] CREATE: Drop and create products table")
-        await cursor.execute("DROP TABLE IF EXISTS async_complex_products")
-        await cursor.execute("""
-            CREATE TABLE async_complex_products (
+        cursor.execute("DROP TABLE IF EXISTS complex_products")
+        cursor.execute("""
+            CREATE TABLE complex_products (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
                 category TEXT NOT NULL,
@@ -220,7 +218,7 @@ async def complex_workflow(use_lock: bool = False) -> None:
                 active INTEGER DEFAULT 1
             )
         """)
-        await conn.commit()
+        conn.commit()
         print("✓ Table created")
 
         # Step 2: INSERT MANY - Add products in bulk
@@ -235,19 +233,19 @@ async def complex_workflow(use_lock: bool = False) -> None:
             ("Mechanical Keyboard", "Electronics", 149.99, 25, 1),
             ("Monitor Stand", "Furniture", 89.99, 18, 0),  # Inactive
         ]
-        await cursor.executemany(
-            """INSERT INTO async_complex_products
+        cursor.executemany(
+            """INSERT INTO complex_products
                (name, category, price, stock, active)
                VALUES (?, ?, ?, ?, ?)""",
             products,
         )
-        await conn.commit()
+        conn.commit()
         print(f"✓ Inserted {len(products)} products")
 
         # Step 3: SELECT MANY - All products ordered by price
         print("\n[STEP 3] SELECT MANY: All products by price (descending)")
-        await cursor.execute(
-            "SELECT name, category, price FROM async_complex_products ORDER BY price DESC"
+        cursor.execute(
+            "SELECT name, category, price FROM complex_products ORDER BY price DESC"
         )
         rows = cursor.fetchall()
         for name, category, price in rows:
@@ -256,8 +254,8 @@ async def complex_workflow(use_lock: bool = False) -> None:
 
         # Step 4: SELECT FEW - Filter by category and price range
         print("\n[STEP 4] SELECT FEW: Electronics between $50-$150")
-        await cursor.execute(
-            """SELECT name, price FROM async_complex_products
+        cursor.execute(
+            """SELECT name, price FROM complex_products
                WHERE category = ? AND price BETWEEN ? AND ?
                AND active = ?""",
             ("Electronics", 50.0, 150.0, 1),
@@ -269,9 +267,9 @@ async def complex_workflow(use_lock: bool = False) -> None:
 
         # Step 5: SELECT ONE - Find specific product
         print("\n[STEP 5] SELECT ONE: Find 'Wireless Mouse'")
-        await cursor.execute(
+        cursor.execute(
             """SELECT name, category, price, stock
-               FROM async_complex_products WHERE name = ?""",
+               FROM complex_products WHERE name = ?""",
             ("Wireless Mouse",),
         )
         row = cursor.fetchone()
@@ -282,17 +280,17 @@ async def complex_workflow(use_lock: bool = False) -> None:
 
         # Step 6: UPDATE - Increase prices for Electronics by 10%
         print("\n[STEP 6] UPDATE: Increase Electronics prices by 10%")
-        await cursor.execute(
-            "UPDATE async_complex_products SET price = price * 1.10 WHERE category = ?",
+        cursor.execute(
+            "UPDATE complex_products SET price = price * 1.10 WHERE category = ?",
             ("Electronics",),
         )
-        await conn.commit()
+        conn.commit()
         print(f"✓ Updated {cursor.rowcount} products")
 
         # Step 7: SELECT ONE (verify update)
         print("\n[STEP 7] SELECT ONE: Verify Laptop Pro new price")
-        await cursor.execute(
-            "SELECT name, price FROM async_complex_products WHERE name = ?",
+        cursor.execute(
+            "SELECT name, price FROM complex_products WHERE name = ?",
             ("Laptop Pro",),
         )
         row = cursor.fetchone()
@@ -302,32 +300,32 @@ async def complex_workflow(use_lock: bool = False) -> None:
 
         # Step 8: UPDATE - Restock low inventory items
         print("\n[STEP 8] UPDATE: Add 10 units to products with stock < 25")
-        await cursor.execute(
-            "UPDATE async_complex_products SET stock = stock + 10 WHERE stock < ? AND active = ?",
+        cursor.execute(
+            "UPDATE complex_products SET stock = stock + 10 WHERE stock < ? AND active = ?",
             (25, 1),
         )
-        await conn.commit()
+        conn.commit()
         print(f"✓ Restocked {cursor.rowcount} products")
 
         # Step 9: DELETE - Remove inactive products
         print("\n[STEP 9] DELETE: Remove inactive products")
-        await cursor.execute(
-            "SELECT name FROM async_complex_products WHERE active = ?",
+        cursor.execute(
+            "SELECT name FROM complex_products WHERE active = ?",
             (0,),
         )
         inactive = cursor.fetchall()
         for name, in inactive:
             print(f"  Removing: {name}")
-        await cursor.execute("DELETE FROM async_complex_products WHERE active = ?", (0,))
-        await conn.commit()
+        cursor.execute("DELETE FROM complex_products WHERE active = ?", (0,))
+        conn.commit()
         print(f"✓ Deleted {len(inactive)} inactive products")
 
         # Step 10: SELECT MANY - Final inventory summary by category
         print("\n[STEP 10] SELECT MANY: Inventory summary by category")
-        await cursor.execute(
+        cursor.execute(
             """SELECT category, COUNT(*) as count, SUM(stock) as total_stock,
                       AVG(price) as avg_price
-               FROM async_complex_products
+               FROM complex_products
                GROUP BY category ORDER BY avg_price DESC"""
         )
         rows = cursor.fetchall()
@@ -339,8 +337,8 @@ async def complex_workflow(use_lock: bool = False) -> None:
 
         # Step 11: SELECT ONE (deleted item - should be None)
         print("\n[STEP 11] SELECT ONE: Query deleted product (Monitor Stand)")
-        await cursor.execute(
-            "SELECT name FROM async_complex_products WHERE name = ?",
+        cursor.execute(
+            "SELECT name FROM complex_products WHERE name = ?",
             ("Monitor Stand",),
         )
         row = cursor.fetchone()
@@ -350,7 +348,7 @@ async def complex_workflow(use_lock: bool = False) -> None:
 
         # Step 12: SELECT with fetchmany - Paginated results
         print("\n[STEP 12] FETCH MANY: Paginated product list (page size=3)")
-        await cursor.execute("SELECT name, price FROM async_complex_products ORDER BY price")
+        cursor.execute("SELECT name, price FROM complex_products ORDER BY price")
         cursor.arraysize = 3
         page_num = 1
         while True:
@@ -363,60 +361,53 @@ async def complex_workflow(use_lock: bool = False) -> None:
             page_num += 1
         print("✓ Pagination completed")
 
-        await cursor.close()
+        cursor.close()
         print("\n✅ Complex workflow completed successfully!")
 
     finally:
-        await conn.close()
+        conn.close()
 
 
-async def main() -> None:
-    """Run all async DB-API examples."""
+def main():
+    """Run all examples."""
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description="rqlite async basic usage examples",
+        description="rqlite sync thread lock basic usage examples",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run python -B examples/async_basic_usage.py              # Without lock (shows warnings)
-  uv run python -B examples/async_basic_usage.py --with-lock  # With lock (no warnings)
+  uv run python -B examples/sync_thread_lock_basic_usage.py              # Without lock (shows warnings)
+  uv run python -B examples/sync_thread_lock_basic_usage.py --with-lock  # With lock (no warnings)
         """
     )
     parser.add_argument(
         "--with-lock",
         action="store_true",
-        help="Use AioLock to suppress transaction warnings"
+        help="Use ThreadLock to suppress transaction warnings"
     )
     args = parser.parse_args()
 
     use_lock = args.with_lock
+    mode = "WITH LOCK" if use_lock else "WITHOUT LOCK"
 
     print("=" * 60)
-    print("Async DB-API 2.0 Examples for rqlite")
-    if use_lock:
-        print("(WITH LOCK - no warnings)")
-    else:
-        print("(WITHOUT LOCK - may show transaction warnings)")
+    print(f"rqlite Sync ThreadLock Basic Usage Examples ({mode})")
     print("=" * 60)
-
-
 
     try:
-        # Run examples in sequence
-        await create_table(use_lock=use_lock)
-        await insert_data(use_lock=use_lock)
-        await query_data(use_lock=use_lock)
-        await update_data(use_lock=use_lock)
-        await batch_insert(use_lock=use_lock)
-        await query_data(use_lock=use_lock)
-        await delete_data(use_lock=use_lock)
-        await context_manager_example(use_lock=use_lock)
-        await complex_workflow(use_lock=use_lock)
+        create_table(use_lock=use_lock)
+        insert_data(use_lock=use_lock)
+        query_data(use_lock=use_lock)
+        update_data(use_lock=use_lock)
+        batch_insert(use_lock=use_lock)
+        query_data(use_lock=use_lock)
+        delete_data(use_lock=use_lock)
+        context_manager_example(use_lock=use_lock)
+        complex_workflow(use_lock=use_lock)
 
         print("\n" + "=" * 60)
         print("All examples completed successfully!")
         print("=" * 60)
-
     except rqlite.OperationalError as e:
         print(f"\n✗ Database error: {e}")
         print("Make sure rqlite is running on localhost:4001")
@@ -425,4 +416,4 @@ Examples:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

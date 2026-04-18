@@ -44,11 +44,11 @@ def _cleanup_test_tables() -> None:
         conn = rqlite.connect(host="localhost", port=4001, lock=rqlite.ThreadLock())
         cursor = conn.cursor()
         for table in [
-            "valkey_test_balance",
-            "valkey_lock_transfer",
-            "valkey_select_test",
-            "valkey_crud_ops",
-            "valkey_lock_test_accounts",
+            "sync_valkey_lock_test_balance",
+            "sync_valkey_lock_transfer",
+            "sync_valkey_select_test",
+            "sync_valkey_crud_ops",
+            "sync_valkey_lock_test_accounts",
         ]:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
         conn.commit()
@@ -68,17 +68,17 @@ def cleanup_after_valkey_test():
 # ── Unit Tests (no Valkey needed) ───────────────────────────────────────
 
 
-class TestValkeyLockUnit:
+class TestSyncValkeyLockUnit:
     """Tests for ValkeyLock creation and protocol compliance."""
 
-    def test_valkey_lock_creation(self):
+    def test_sync_valkey_lock_creation(self):
         """Test ValkeyLock can be created with default params."""
         lock = ValkeyLock(name="test")
         assert lock.name == "test"
         assert lock._key == "pyrqlite:lock:test"
         assert lock.timeout == 10.0
 
-    def test_valkey_lock_custom_params(self):
+    def test_sync_valkey_lock_custom_params(self):
         """Test ValkeyLock with custom connection params."""
         lock = ValkeyLock(
             name="custom",
@@ -94,28 +94,28 @@ class TestValkeyLockUnit:
         assert lock.db == 2
         assert lock.timeout == 5.0
 
-    def test_valkey_lock_empty_name_raises(self):
+    def test_sync_valkey_lock_empty_name_raises(self):
         """Test empty name raises ValueError."""
         with pytest.raises(ValueError, match="must not be empty"):
             ValkeyLock(name="")
 
-    def test_valkey_lock_zero_timeout_raises(self):
+    def test_sync_valkey_lock_zero_timeout_raises(self):
         """Test zero timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout must be > 0"):
             ValkeyLock(name="test", timeout=0)
 
-    def test_valkey_lock_negative_timeout_raises(self):
+    def test_sync_valkey_lock_negative_timeout_raises(self):
         """Test negative timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout must be > 0"):
             ValkeyLock(name="test", timeout=-1)
 
-    def test_valkey_lock_has_token(self):
+    def test_sync_valkey_lock_has_token(self):
         """Test lock generates a unique token (via valkey-py Lock)."""
         lock = ValkeyLock(name="token_test")
         # Token is managed internally by valkey-py's Lock
         assert lock._acquired is False
 
-    def test_valkey_lock_satisfies_protocol(self):
+    def test_sync_valkey_lock_satisfies_protocol(self):
         """Test ValkeyLock satisfies LockProtocol."""
         lock = ValkeyLock(name="protocol_test")
         assert isinstance(lock, rqlite.LockProtocol)
@@ -125,10 +125,10 @@ class TestValkeyLockUnit:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestValkeyLockIntegration:
+class TestSyncValkeyLockIntegration:
     """Tests for ValkeyLock acquire/release with live Valkey."""
 
-    def test_acquire_release_sync(self):
+    def test_sync_valkey_lock_acquire_release(self):
         """Test basic acquire and release cycle."""
         lock = ValkeyLock(name="integration_test", timeout=10.0)
         assert lock.acquire() is True
@@ -136,7 +136,7 @@ class TestValkeyLockIntegration:
         lock.release()
         assert lock._acquired is False
 
-    def test_acquire_timeout_non_blocking(self):
+    def test_sync_valkey_lock_acquire_timeout_non_blocking(self):
         """Test non-blocking acquire returns False when held."""
         lock1 = ValkeyLock(name="timeout_test", timeout=10.0)
         lock2 = ValkeyLock(name="timeout_test", timeout=10.0)
@@ -146,7 +146,7 @@ class TestValkeyLockIntegration:
         assert lock2.acquire(blocking=False) is False
         lock1.release()
 
-    def test_acquire_timeout_blocking(self):
+    def test_sync_valkey_lock_acquire_timeout_blocking(self):
         """Test blocking acquire raises TimeoutError after timeout."""
         lock1 = ValkeyLock(name="blocking_test", timeout=10.0)
         lock2 = ValkeyLock(name="blocking_test", timeout=10.0)
@@ -156,21 +156,21 @@ class TestValkeyLockIntegration:
             lock2.acquire(blocking=True, timeout=0.5)
         lock1.release()
 
-    def test_context_manager_sync(self):
+    def test_sync_valkey_lock_context_manager(self):
         """Test ValkeyLock as context manager."""
         lock = ValkeyLock(name="cm_test", timeout=10.0)
         with lock:
             assert lock._acquired is True
         assert lock._acquired is False
 
-    def test_double_release_safe(self):
+    def test_sync_valkey_lock_double_release_safe(self):
         """Test releasing twice doesn't raise."""
         lock = ValkeyLock(name="double_release_test", timeout=10.0)
         lock.acquire()
         lock.release()
         lock.release()  # Should be safe (no-op)
 
-    def test_acquire_after_release(self):
+    def test_sync_valkey_lock_acquire_after_release(self):
         """Test re-acquiring after release works."""
         lock = ValkeyLock(name="reacquire_test", timeout=10.0)
         assert lock.acquire() is True
@@ -178,12 +178,12 @@ class TestValkeyLockIntegration:
         assert lock.acquire() is True
         lock.release()
 
-    def test_release_non_owner_safe(self):
+    def test_sync_valkey_lock_release_non_owner_safe(self):
         """Test releasing a lock you don't own is safe (no-op)."""
         lock = ValkeyLock(name="non_owner_test", timeout=10.0)
         lock.release()  # Should not raise
 
-    def test_different_locks_independent(self):
+    def test_sync_valkey_lock_different_locks_independent(self):
         """Test different lock names are independent."""
         lock1 = ValkeyLock(name="independent_1", timeout=10.0)
         lock2 = ValkeyLock(name="independent_2", timeout=10.0)
@@ -198,10 +198,10 @@ class TestValkeyLockIntegration:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestDistributedSerialization:
+class TestSyncValkeyLockDistributedSerialization:
     """Tests proving Valkey lock serializes cross-process transactions."""
 
-    def test_distributed_serialization_sync(self):
+    def test_sync_valkey_lock_distributed_serialization(self):
         """Multiple threads with ValkeyLock produce correct final balance.
 
         Without the lock, concurrent reads + writes cause lost updates.
@@ -244,7 +244,7 @@ class TestDistributedSerialization:
 
         def worker(thread_id: int) -> None:
             try:
-                lock = ValkeyLock(name="distributed_test", timeout=30.0)
+                lock = ValkeyLock(name="sync_distributed_test", timeout=30.0)
                 conn = rqlite.connect(host="localhost", port=4001, lock=lock)
                 c = conn.cursor()
                 try:
@@ -288,7 +288,7 @@ class TestDistributedSerialization:
             f"lost updates detected! Total deductions: ${initial - final_balance:.2f}"
         )
 
-    def test_valkey_lock_with_connection(self):
+    def test_sync_valkey_lock_with_connection(self):
         """Use ValkeyLock with rqlite.connect — full CRUD workflow."""
         lock = ValkeyLock(name="crud_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
@@ -356,12 +356,12 @@ class TestDistributedSerialization:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestLockWithOperations:
+class TestSyncValkeyLockWithOperations:
     """Test that lock works correctly with rqlite operations."""
 
-    def test_lock_suppresses_warnings(self):
+    def test_sync_valkey_lock_suppresses_warnings(self):
         """Test ValkeyLock suppresses transaction SQL warnings."""
-        lock = ValkeyLock(name="warning_test", timeout=10.0)
+        lock = ValkeyLock(name="sync_warning_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
@@ -379,9 +379,9 @@ class TestLockWithOperations:
             cursor.close()
             conn.close()
 
-    def test_lock_with_select(self):
+    def test_sync_valkey_lock_with_select(self):
         """Test SELECT works under ValkeyLock."""
-        lock = ValkeyLock(name="select_test", timeout=10.0)
+        lock = ValkeyLock(name="sync_select_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
@@ -401,9 +401,9 @@ class TestLockWithOperations:
             cursor.close()
             conn.close()
 
-    def test_lock_with_insert_update_delete(self):
+    def test_sync_valkey_lock_with_insert_update_delete(self):
         """Test INSERT/UPDATE/DELETE work under ValkeyLock."""
-        lock = ValkeyLock(name="crud_ops_test", timeout=10.0)
+        lock = ValkeyLock(name="sync_crud_ops_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
@@ -439,7 +439,7 @@ class TestLockWithOperations:
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
-class TestDeadlockPrevention:
+class TestSyncValkeyLockDeadlockPrevention:
     """Demonstrate that Valkey lock prevents lost updates in concurrent rqlite transactions.
 
     Without a distributed lock, rqlite's queue-based transaction model allows
@@ -450,7 +450,7 @@ class TestDeadlockPrevention:
     ensuring each read sees the most recent committed value.
     """
 
-    def test_no_lock_lost_updates(self):
+    def test_sync_valkey_lock_no_lock_lost_updates(self):
         """Without any lock, concurrent transfers produce lost updates (data corruption)."""
         # Setup: create table with initial balance
         conn = rqlite.connect(host="localhost", port=4001)

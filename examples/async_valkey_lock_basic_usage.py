@@ -1,22 +1,22 @@
-"""Async Redis distributed lock examples for rqlite.
+"""Async Valkey distributed lock examples for rqlite.
 
-This example demonstrates how to use AioRedisLock with the async rqlite
+This example demonstrates how to use AioValkeyLock with the async rqlite
 DB-API 2.0 client to achieve cross-process transaction serialization.
 
 Prerequisites:
     Install optional dependency:
-        uv add tangled-pyrqlite[redis]
+        uv add tangled-pyrqlite[valkey]
 
-    Start Redis server:
-        podman rm -f redis-test
-        podman run -d --name redis-test -p 6379:6379 docker.io/redis
+    Start Valkey server:
+        podman rm -f valkey-test
+        podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey
 
     Start rqlite server:
         podman rm -f rqlite-test
         podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
 
 Usage:
-    uv run python -B examples/redis_lock_async.py
+    uv run python -B examples/async_valkey_lock_basic_usage.py
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from collections.abc import Callable
 from typing import Any
 
 import rqlite
-from rqlite import AioRedisLock
+from rqlite import AioValkeyLock
 
 
 def print_docstring(func: Callable) -> Callable:
@@ -46,28 +46,28 @@ def print_docstring(func: Callable) -> Callable:
 
 @print_docstring
 async def basic_lock_usage() -> None:
-    """Basic AioRedisLock usage with async rqlite connection."""
-    lock = AioRedisLock(name="async_basic_demo", timeout=10.0)
+    """Basic AioValkeyLock usage with async rqlite connection."""
+    lock = AioValkeyLock(name="async_basic_demo", timeout=10.0)
 
     conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
     cursor = await conn.cursor()
 
     try:
         # Create table
-        await cursor.execute("DROP TABLE IF EXISTS redis_async_basic")
+        await cursor.execute("DROP TABLE IF EXISTS valkey_async_basic")
         await cursor.execute("""
-            CREATE TABLE redis_async_basic (
+            CREATE TABLE valkey_async_basic (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
                 balance REAL
             )
         """)
         await conn.commit()
-        print("✓ Table 'redis_async_basic' created")
+        print("✓ Table 'valkey_async_basic' created")
 
         # Insert with lock — serialized across processes
         await cursor.execute(
-            "INSERT INTO redis_async_basic (name, balance) VALUES (?, ?)",
+            "INSERT INTO valkey_async_basic (name, balance) VALUES (?, ?)",
             ("Alice", 1000.0),
         )
         await conn.commit()
@@ -80,8 +80,8 @@ async def basic_lock_usage() -> None:
 
 @print_docstring
 async def context_manager_pattern() -> None:
-    """Using AioRedisLock as async context manager."""
-    lock = AioRedisLock(name="async_context_demo", timeout=10.0)
+    """Using AioValkeyLock as async context manager."""
+    lock = AioValkeyLock(name="async_context_demo", timeout=10.0)
 
     conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
     async with conn:
@@ -89,9 +89,9 @@ async def context_manager_pattern() -> None:
 
         try:
             # Drop and create table
-            await cursor.execute("DROP TABLE IF EXISTS redis_async_context")
+            await cursor.execute("DROP TABLE IF EXISTS valkey_async_context")
             await cursor.execute("""
-                CREATE TABLE redis_async_context (
+                CREATE TABLE valkey_async_context (
                     id INTEGER PRIMARY KEY,
                     account TEXT NOT NULL UNIQUE,
                     balance REAL
@@ -101,30 +101,30 @@ async def context_manager_pattern() -> None:
 
             # Insert initial data
             await cursor.execute(
-                "INSERT INTO redis_async_context (account, balance) VALUES (?, ?)",
+                "INSERT INTO valkey_async_context (account, balance) VALUES (?, ?)",
                 ("ACC001", 5000.0),
             )
             await conn.commit()
-            print("✓ Table 'redis_async_context' created with $5000.00")
+            print("✓ Table 'valkey_async_context' created with $5000.00")
 
             # Use async lock as context manager — auto-release on exit
             amount = 200.0
             async with lock:
                 await cursor.execute(
-                    "SELECT balance FROM redis_async_context WHERE account=?",
+                    "SELECT balance FROM valkey_async_context WHERE account=?",
                     ("ACC001",),
                 )
                 row = cursor.fetchone()
                 old_balance = row[0]
 
                 await cursor.execute(
-                    "UPDATE redis_async_context SET balance=? WHERE account=?",
+                    "UPDATE valkey_async_context SET balance=? WHERE account=?",
                     (old_balance - amount, "ACC001"),
                 )
                 await conn.commit()
 
                 await cursor.execute(
-                    "SELECT balance FROM redis_async_context WHERE account=?",
+                    "SELECT balance FROM valkey_async_context WHERE account=?",
                     ("ACC001",),
                 )
                 new_balance = cursor.fetchone()[0]
@@ -137,8 +137,8 @@ async def context_manager_pattern() -> None:
 
 @print_docstring
 async def transfer_workflow() -> None:
-    """Complete bank transfer workflow with AioRedisLock."""
-    lock = AioRedisLock(name="async_transfer", timeout=10.0)
+    """Complete bank transfer workflow with AioValkeyLock."""
+    lock = AioValkeyLock(name="async_transfer", timeout=10.0)
 
     conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
 
@@ -146,9 +146,9 @@ async def transfer_workflow() -> None:
         cursor = await conn.cursor()
 
         # Setup accounts table
-        await cursor.execute("DROP TABLE IF EXISTS redis_async_accounts")
+        await cursor.execute("DROP TABLE IF EXISTS valkey_async_accounts")
         await cursor.execute("""
-            CREATE TABLE redis_async_accounts (
+            CREATE TABLE valkey_async_accounts (
                 id INTEGER PRIMARY KEY,
                 account TEXT NOT NULL UNIQUE,
                 balance REAL NOT NULL
@@ -159,13 +159,13 @@ async def transfer_workflow() -> None:
         # Seed accounts
         for acct, bal in [("ACC001", 1000.0), ("ACC002", 2000.0)]:
             await cursor.execute(
-                "INSERT INTO redis_async_accounts (account, balance) VALUES (?, ?)",
+                "INSERT INTO valkey_async_accounts (account, balance) VALUES (?, ?)",
                 (acct, bal),
             )
         await conn.commit()
 
         # Show initial state
-        await cursor.execute("SELECT account, balance FROM redis_async_accounts ORDER BY account")
+        await cursor.execute("SELECT account, balance FROM valkey_async_accounts ORDER BY account")
         print("\n  Initial balances:")
         for acct, bal in cursor.fetchall():
             print(f"    {acct}: ${bal:.2f}")
@@ -174,7 +174,7 @@ async def transfer_workflow() -> None:
         amount = 150.0
         async with lock:
             await cursor.execute(
-                "SELECT balance FROM redis_async_accounts WHERE account=?",
+                "SELECT balance FROM valkey_async_accounts WHERE account=?",
                 ("ACC001",),
             )
             sender_bal = cursor.fetchone()[0]
@@ -184,25 +184,25 @@ async def transfer_workflow() -> None:
                 return
 
             await cursor.execute(
-                "UPDATE redis_async_accounts SET balance=? WHERE account=?",
+                "UPDATE valkey_async_accounts SET balance=? WHERE account=?",
                 (sender_bal - amount, "ACC001"),
             )
 
             await cursor.execute(
-                "SELECT balance FROM redis_async_accounts WHERE account=?",
+                "SELECT balance FROM valkey_async_accounts WHERE account=?",
                 ("ACC002",),
             )
             receiver_bal = cursor.fetchone()[0]
 
             await cursor.execute(
-                "UPDATE redis_async_accounts SET balance=? WHERE account=?",
+                "UPDATE valkey_async_accounts SET balance=? WHERE account=?",
                 (receiver_bal + amount, "ACC002"),
             )
 
             await conn.commit()
 
         # Show final state
-        await cursor.execute("SELECT account, balance FROM redis_async_accounts ORDER BY account")
+        await cursor.execute("SELECT account, balance FROM valkey_async_accounts ORDER BY account")
         print(f"\n  After transfer (${amount:.2f}):")
         for acct, bal in cursor.fetchall():
             print(f"    {acct}: ${bal:.2f}")
@@ -220,9 +220,9 @@ async def concurrent_tasks_demo() -> None:
     """Demonstrate lock serializing concurrent async tasks.
 
     Uses asyncio.gather to run multiple coroutines that compete for the
-    same RedisLock — proving cross-task serialization.
+    same AioValkeyLock — proving cross-task serialization.
     """
-    lock = AioRedisLock(name="async_concurrent_demo", timeout=10.0)
+    lock = AioValkeyLock(name="async_concurrent_demo", timeout=10.0)
     results: list[str] = []
 
     async def worker(task_id: int) -> None:
@@ -232,7 +232,7 @@ async def concurrent_tasks_demo() -> None:
 
         try:
             # Create per-task table for isolation
-            table = f"redis_async_worker_{task_id}"
+            table = f"valkey_async_worker_{task_id}"
             await cursor.execute(f"DROP TABLE IF EXISTS {table}")
             await cursor.execute(
                 f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, value TEXT)"
@@ -252,34 +252,34 @@ async def concurrent_tasks_demo() -> None:
             await cursor.close()
             await conn.close()
 
-    # Run multiple tasks concurrently — they serialize via AioRedisLock
+    # Run multiple tasks concurrently — they serialize via AioValkeyLock
     tasks = [worker(i) for i in range(3)]
     await asyncio.gather(*tasks)
 
-    print("\n  Task execution order (serialized by AioRedisLock):")
+    print("\n  Task execution order (serialized by AioValkeyLock):")
     for r in results:
         print(r)
     print("✓ All tasks serialized through distributed lock")
 
 
 async def main() -> None:
-    """Run all async Redis lock examples."""
+    """Run all async Valkey lock examples."""
     parser = argparse.ArgumentParser(
-        description="rqlite async Redis lock examples",
+        description="rqlite async Valkey lock examples",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run python -B examples/redis_lock_async.py
+  uv run python -B examples/async_valkey_lock_basic_usage.py
 
 Prerequisites:
-  - Start Redis: podman run -d --name redis-test -p 6379:6379 docker.io/redis
+  - Start Valkey: podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey
   - Start rqlite: podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
         """,
     )
     _ = parser.parse_args()
 
     print("=" * 60)
-    print("rqlite Async Redis Lock Examples")
+    print("rqlite Async Valkey Lock Basic Usage Examples")
     print("=" * 60)
 
     try:
@@ -289,7 +289,7 @@ Prerequisites:
         await concurrent_tasks_demo()
 
         print("\n" + "=" * 60)
-        print("All async Redis lock examples completed successfully!")
+        print("All async Valkey lock examples completed successfully!")
         print("=" * 60)
 
     except rqlite.OperationalError as e:
@@ -297,7 +297,7 @@ Prerequisites:
         print("Make sure rqlite is running on localhost:4001")
     except ImportError as e:
         print(f"\n✗ Missing dependency: {e}")
-        print("Install with: uv add tangled-pyrqlite[redis]")
+        print("Install with: uv add tangled-pyrqlite[valkey]")
     except Exception as e:
         print(f"\n✗ Error: {e}")
 

@@ -44,11 +44,11 @@ def _cleanup_test_tables() -> None:
         conn = rqlite.connect(host="localhost", port=4001, lock=rqlite.ThreadLock())
         cursor = conn.cursor()
         for table in [
-            "redis_async_test_balance",
-            "redis_async_crud",
-            "redis_async_accounts",
-            "redis_async_context",
-            "redis_async_basic",
+            "async_redis_lock_test_balance",
+            "async_redis_lock_crud",
+            "async_redis_lock_accounts",
+            "async_redis_lock_context",
+            "async_redis_lock_basic",
         ]:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
         conn.commit()
@@ -68,17 +68,17 @@ def cleanup_after_redis_test():
 # ── Unit Tests (no Redis needed) ───────────────────────────────────────
 
 
-class TestAioRedisLockUnit:
+class TestAsyncRedisLockUnit:
     """Tests for AioRedisLock creation and protocol compliance."""
 
-    def test_aio_redis_lock_creation(self):
+    def test_async_redis_lock_creation(self):
         """Test AioRedisLock can be created with default params."""
         lock = AioRedisLock(name="test")
         assert lock.name == "test"
         assert lock._key == "pyrqlite:lock:test"
         assert lock.timeout == 10.0
 
-    def test_aio_redis_lock_custom_params(self):
+    def test_async_redis_lock_custom_params(self):
         """Test AioRedisLock with custom connection params."""
         lock = AioRedisLock(
             name="custom",
@@ -91,25 +91,25 @@ class TestAioRedisLockUnit:
         assert lock.host == "redis.example.com"
         assert lock.port == 6380
 
-    def test_aio_redis_lock_empty_name_raises(self):
+    def test_async_redis_lock_empty_name_raises(self):
         """Test empty name raises ValueError."""
         with pytest.raises(ValueError, match="must not be empty"):
             AioRedisLock(name="")
 
-    def test_aio_redis_lock_zero_timeout_raises(self):
+    def test_async_redis_lock_zero_timeout_raises(self):
         """Test zero timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout must be > 0"):
             AioRedisLock(name="test", timeout=0)
 
-    def test_aio_redis_lock_has_token(self):
+    def test_async_redis_lock_has_token(self):
         """Test lock generates a unique token (via redis-py Lock)."""
-        lock = AioRedisLock(name="token_test")
+        lock = AioRedisLock(name="sync_token_test")
         # Token is managed internally by redis-py's async Lock
         assert lock._acquired is False
 
-    def test_aio_redis_lock_satisfies_protocol(self):
+    def test_async_redis_lock_satisfies_protocol(self):
         """Test AioRedisLock satisfies AsyncLockProtocol."""
-        lock = AioRedisLock(name="protocol_test")
+        lock = AioRedisLock(name="sync_protocol_test")
         assert isinstance(lock, rqlite.AsyncLockProtocol)
 
 
@@ -117,12 +117,12 @@ class TestAioRedisLockUnit:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestAioRedisLockIntegration:
+class TestAsyncRedisLockIntegration:
     """Tests for AioRedisLock acquire/release with live Redis."""
 
-    def test_acquire_release_async(self):
+    def test_async_redis_lock_acquire_release(self):
         """Test basic async acquire and release cycle."""
-        lock = AioRedisLock(name="async_integration_test", timeout=10.0)
+        lock = AioRedisLock(name="async_lock_integration_test", timeout=10.0)
 
         async def _test():
             assert await lock.acquire() is True
@@ -132,10 +132,10 @@ class TestAioRedisLockIntegration:
 
         asyncio.run(_test())
 
-    def test_acquire_timeout_non_blocking_async(self):
+    def test_async_redis_lock_acquire_timeout_non_blocking(self):
         """Test non-blocking async acquire returns False when held."""
-        lock1 = AioRedisLock(name="async_timeout_test", timeout=10.0)
-        lock2 = AioRedisLock(name="async_timeout_test", timeout=10.0)
+        lock1 = AioRedisLock(name="async_lock_timeout_test", timeout=10.0)
+        lock2 = AioRedisLock(name="async_lock_timeout_test", timeout=10.0)
 
         async def _test():
             assert await lock1.acquire() is True
@@ -144,9 +144,9 @@ class TestAioRedisLockIntegration:
 
         asyncio.run(_test())
 
-    def test_async_context_manager(self):
+    def test_async_redis_lock_context_manager(self):
         """Test AioRedisLock as async context manager."""
-        lock = AioRedisLock(name="async_cm_test", timeout=10.0)
+        lock = AioRedisLock(name="async_lock_cm_test", timeout=10.0)
 
         async def _test():
             async with lock:
@@ -155,9 +155,9 @@ class TestAioRedisLockIntegration:
 
         asyncio.run(_test())
 
-    def test_double_release_safe_async(self):
+    def test_async_redis_lock_double_release_safe(self):
         """Test releasing twice doesn't raise."""
-        lock = AioRedisLock(name="async_double_release_test", timeout=10.0)
+        lock = AioRedisLock(name="async_lock_double_release_test", timeout=10.0)
 
         async def _test():
             await lock.acquire()
@@ -171,10 +171,10 @@ class TestAioRedisLockIntegration:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestDistributedSerialization:
+class TestAsyncRedisLockDistributedSerialization:
     """Tests proving AioRedisLock serializes cross-process transactions."""
 
-    def test_distributed_serialization_async(self):
+    def test_async_redis_lock_distributed_serialization(self):
         """Two async tasks with AioRedisLock produce correct final balance."""
         import rqlite
 
@@ -200,7 +200,7 @@ class TestDistributedSerialization:
             cursor.close()
             conn.close()
 
-        lock = AioRedisLock(name="async_distributed_test", timeout=30.0)
+        lock = AioRedisLock(name="async_lock_distributed_test", timeout=30.0)
         iterations = 20
         amount = 50.0
         expected_final = initial - (iterations * amount)
@@ -246,12 +246,12 @@ class TestDistributedSerialization:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestAioRedisLockWithAsyncConnection:
+class TestAsyncRedisLockWithAsyncConnection:
     """Test AioRedisLock with async rqlite connection."""
 
-    def test_async_lock_with_async_connection(self):
+    def test_async_redis_lock_with_async_connection(self):
         """Use AioRedisLock with async_connect — full CRUD workflow."""
-        lock = AioRedisLock(name="async_crud_test", timeout=10.0)
+        lock = AioRedisLock(name="async_lock_crud_test", timeout=10.0)
         conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
 
         async def _run():
@@ -303,9 +303,9 @@ class TestAioRedisLockWithAsyncConnection:
 
         asyncio.run(_run())
 
-    def test_async_lock_suppresses_warnings(self):
+    def test_async_redis_lock_suppresses_warnings(self):
         """Test AioRedisLock suppresses transaction SQL warnings."""
-        lock = AioRedisLock(name="async_warning_test", timeout=10.0)
+        lock = AioRedisLock(name="async_lock_warning_test", timeout=10.0)
         conn = rqlite.async_connect(host="localhost", port=4001, lock=lock)
 
         async def _run():

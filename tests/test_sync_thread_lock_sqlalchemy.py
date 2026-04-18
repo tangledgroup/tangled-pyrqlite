@@ -25,7 +25,7 @@ class Base(DeclarativeBase):
     """Base class for SQLAlchemy models."""
 
 
-class TestUser(Base):
+class TestLockUser(Base):
     """Test user model."""
 
     __tablename__ = "sa_lock_users"
@@ -36,7 +36,7 @@ class TestUser(Base):
     age: Mapped[int | None] = mapped_column()
 
 
-class TestProduct(Base):
+class TestLockProduct(Base):
     """Test product model."""
 
     __tablename__ = "sa_lock_products"
@@ -110,7 +110,7 @@ def tables_with_lock(engine_with_threadlock):
     Base.metadata.drop_all(engine_with_threadlock)
 
 
-class TestSQLAlchemyCoreWithoutLock:
+class TestSyncThreadLockSQLAlchemyCoreWithoutLock:
     """Test SQLAlchemy Core operations without lock."""
 
     def test_create_tables(self, engine_without_lock):
@@ -179,7 +179,7 @@ class TestSQLAlchemyCoreWithoutLock:
             assert row is None
 
 
-class TestSQLAlchemyCoreWithLock:
+class TestSyncThreadLockSQLAlchemyCoreWithLock:
     """Test SQLAlchemy Core operations with lock."""
 
     def test_create_tables_with_threadlock(self, engine_with_threadlock):
@@ -269,7 +269,7 @@ class TestSQLAlchemyCoreWithLock:
             Base.metadata.drop_all(engine_with_threading_lock)
 
 
-class TestSQLAlchemyORMWithoutLock:
+class TestSyncThreadLockSQLAlchemyORMWithoutLock:
     """Test SQLAlchemy ORM operations without lock."""
 
     def test_session_add_commit(self, engine_without_lock, tables_without_lock):
@@ -317,7 +317,7 @@ class TestSQLAlchemyORMWithoutLock:
             assert updated.age == 30
 
 
-class TestSQLAlchemyORMWithLock:
+class TestSyncThreadLockSQLAlchemyORMWithLock:
     """Test SQLAlchemy ORM operations with lock."""
 
     def test_session_add_commit_with_threadlock(self, engine_with_threadlock, tables_with_lock):
@@ -380,7 +380,7 @@ class TestSQLAlchemyORMWithLock:
             Base.metadata.drop_all(engine_with_threading_lock)
 
 
-class TestSQLAlchemyLockSuppressesWarnings:
+class TestSyncThreadLockSQLAlchemyLockSuppressesWarnings:
     """Test that lock suppresses transaction warnings in SQLAlchemy."""
 
     def test_begin_warning_without_lock(self, engine_without_lock):
@@ -456,7 +456,7 @@ class TestSQLAlchemyLockSuppressesWarnings:
                 )
 
 
-class TestSQLAlchemyFullWorkflowWithoutLock:
+class TestSyncThreadLockSQLAlchemyFullWorkflowWithoutLock:
     """Test full CRUD workflow without lock."""
 
     def test_full_core_workflow(self, engine_without_lock):
@@ -515,7 +515,7 @@ class TestSQLAlchemyFullWorkflowWithoutLock:
             Base.metadata.drop_all(engine_without_lock)
 
 
-class TestSQLAlchemyFullWorkflowWithLock:
+class TestSyncThreadLockSQLAlchemyFullWorkflowWithLock:
     """Test full CRUD workflow with lock."""
 
     def test_full_core_workflow_with_threadlock(self, engine_with_threadlock):
@@ -621,7 +621,7 @@ class TestSQLAlchemyFullWorkflowWithLock:
             Base.metadata.drop_all(engine_with_threadlock)
 
 
-class TestSQLAlchemyEngineLockConfiguration:
+class TestSyncThreadLockSQLAlchemyEngineLockConfiguration:
     """Test engine lock configuration."""
 
     def test_connection_without_lock_has_none(self, engine_without_lock):

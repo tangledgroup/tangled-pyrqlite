@@ -1,4 +1,4 @@
-"""Tests for read consistency levels in rqlite client."""
+"""Tests for sync DB-API 2.0 read consistency with ThreadLock."""
 
 
 import pytest
@@ -7,7 +7,7 @@ import rqlite
 from rqlite.types import ReadConsistency
 
 
-class TestReadConsistencyEnum:
+class TestSyncThreadLockReadConsistencyEnum:
     """Test ReadConsistency enum values and methods."""
 
     def test_weak_consistency_value(self):
@@ -42,7 +42,7 @@ class TestReadConsistencyEnum:
         assert actual == expected
 
 
-class TestConnectionReadConsistency:
+class TestSyncThreadLockConnectionReadConsistency:
     """Test read consistency in Connection class."""
 
     def test_default_read_consistency_is_linearizable(self):
@@ -117,7 +117,7 @@ class TestConnectionReadConsistency:
             rqlite.connect(host="localhost", port=4001, read_consistency="invalid")
 
 
-class TestCursorReadConsistency:
+class TestSyncThreadLockCursorReadConsistency:
     """Test that cursor uses connection's read consistency for SELECT queries."""
 
     def test_select_query_includes_consistency_level(self, connection):
@@ -298,7 +298,7 @@ class TestCursorReadConsistency:
         conn.close()
 
 
-class TestSQLAlchemyReadConsistency:
+class TestSyncThreadLockSQLAlchemyReadConsistency:
     """Test read consistency with SQLAlchemy dialect."""
 
     def test_sqlalchemy_default_consistency(self, connection):
@@ -403,7 +403,7 @@ class TestSQLAlchemyReadConsistency:
         engine.dispose()
 
 
-class TestReadConsistencyIntegration:
+class TestSyncThreadLockReadConsistencyIntegration:
     """Integration tests for read consistency levels."""
 
     def test_all_consistency_levels_work(self):

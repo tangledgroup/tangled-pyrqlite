@@ -404,8 +404,8 @@ engine = create_engine(
 | `AioLock` | async | In-process tasks | Single process, async-safe transactions |
 | **`AioRedisLock`** | **async** | **Cross-process (distributed)** | Multi-process async, ACID isolation |
 
-For full examples see: `examples/redis_lock_sync.py`, `examples/redis_lock_async.py`,
-`examples/distributed_transfer.py`.
+For full examples see: `examples/sync_redis_lock_basic_usage.py`, `examples/async_redis_lock_basic_usage.py`,
+`examples/sync_redis_lock_distributed_transfer.py`.
 ```
 
 ### SQLAlchemy
@@ -488,20 +488,20 @@ See the `examples/` directory for complete working examples.
 
 **Without lock (shows transaction warnings):**
 ```bash
-# DB-API 2.0 examples with warnings
-uv run python -B examples/basic_usage.py
+# Sync ThreadLock DB-API 2.0 examples with warnings
+uv run python -B examples/sync_thread_lock_basic_usage.py
 
-# SQLAlchemy ORM examples with warnings
-uv run python -B examples/sqlalchemy_orm.py
+# Sync ThreadLock SQLAlchemy ORM examples with warnings
+uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py
 ```
 
 **With lock (no transaction warnings):**
 ```bash
-# DB-API 2.0 examples without warnings
-uv run python -B examples/basic_usage.py --with-lock
+# Sync ThreadLock DB-API 2.0 examples without warnings
+uv run python -B examples/sync_thread_lock_basic_usage.py --with-lock
 
-# SQLAlchemy ORM examples without warnings
-uv run python -B examples/sqlalchemy_orm.py --with-lock
+# Sync ThreadLock SQLAlchemy ORM examples without warnings
+uv run python -B examples/sync_thread_lock_sqlalchemy_orm.py --with-lock
 ```
 
 The `-B` flag disables byte-code generation for cleaner output.
@@ -510,12 +510,15 @@ The `-B` flag disables byte-code generation for cleaner output.
 
 | File | Description |
 |------|-------------|
-| `basic_usage.py` | DB-API 2.0 CRUD operations |
-| `async_basic_usage.py` | Async DB-API 2.0 examples |
-| `sqlalchemy_orm.py` | SQLAlchemy ORM usage |
-| `redis_lock_sync.py` | Sync Redis distributed lock examples |
-| `redis_lock_async.py` | Async Redis distributed lock examples |
-| `distributed_transfer.py` | Cross-process bank transfer demo (proves Redis lock works) |
+| `sync_thread_lock_basic_usage.py` | Sync DB-API 2.0 CRUD with ThreadLock |
+| `async_aio_lock_basic_usage.py` | Async DB-API 2.0 examples with AioLock |
+| `sync_thread_lock_sqlalchemy_orm.py` | Sync SQLAlchemy ORM usage |
+| `async_aio_lock_sqlalchemy_orm.py` | Async SQLAlchemy ORM usage |
+| `sync_redis_lock_basic_usage.py` | Sync Redis distributed lock examples |
+| `async_redis_lock_basic_usage.py` | Async Redis distributed lock examples |
+| `sync_valkey_lock_basic_usage.py` | Sync Valkey distributed lock examples |
+| `async_valkey_lock_basic_usage.py` | Async Valkey distributed lock examples |
+| `sync_redis_lock_distributed_transfer.py` | Cross-process bank transfer demo (proves Redis lock works) |
 
 ### Locking Mechanism
 

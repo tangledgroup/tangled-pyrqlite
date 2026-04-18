@@ -1,4 +1,4 @@
-"""Async SQLAlchemy ORM examples for rqlite.
+"""Async AioLock SQLAlchemy ORM examples for rqlite.
 
 This example demonstrates using SQLAlchemy 2.0 async ORM with rqlite database.
 
@@ -13,10 +13,10 @@ Prerequisites:
 
 Usage:
     # Without lock (shows transaction warnings):
-    uv run python -B examples/async_sqlalchemy_orm.py
+    uv run python -B examples/async_aio_lock_sqlalchemy_orm.py
 
     # With lock (no transaction warnings):
-    uv run python -B examples/async_sqlalchemy_orm.py --with-lock
+    uv run python -B examples/async_aio_lock_sqlalchemy_orm.py --with-lock
 """
 
 import argparse
@@ -360,8 +360,8 @@ async def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run python -B examples/async_sqlalchemy_orm.py              # Without lock (shows warnings)
-  uv run python -B examples/async_sqlalchemy_orm.py --with-lock  # With lock (no warnings)
+  uv run python -B examples/async_aio_lock_sqlalchemy_orm.py              # Without lock (shows warnings)
+  uv run python -B examples/async_aio_lock_sqlalchemy_orm.py --with-lock  # With lock (no warnings)
         """
     )
     parser.add_argument(

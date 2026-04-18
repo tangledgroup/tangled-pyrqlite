@@ -44,11 +44,11 @@ def _cleanup_test_tables() -> None:
         conn = rqlite.connect(host="localhost", port=4001, lock=rqlite.ThreadLock())
         cursor = conn.cursor()
         for table in [
-            "redis_test_balance",
-            "redis_lock_transfer",
-            "redis_select_test",
-            "redis_crud_ops",
-            "redis_lock_test_accounts",
+            "sync_redis_lock_test_balance",
+            "sync_redis_lock_transfer",
+            "sync_redis_select_test",
+            "sync_redis_crud_ops",
+            "sync_redis_lock_test_accounts",
         ]:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
         conn.commit()
@@ -68,17 +68,17 @@ def cleanup_after_redis_test():
 # ── Unit Tests (no Redis needed) ───────────────────────────────────────
 
 
-class TestRedisLockUnit:
-    """Tests for RedisLock creation and protocol compliance."""
+class TestSyncRedisLockUnit:
+    """Tests for SyncRedisLock creation and protocol compliance."""
 
-    def test_redis_lock_creation(self):
+    def test_sync_redis_lock_creation(self):
         """Test RedisLock can be created with default params."""
         lock = RedisLock(name="test")
         assert lock.name == "test"
         assert lock._key == "pyrqlite:lock:test"
         assert lock.timeout == 10.0
 
-    def test_redis_lock_custom_params(self):
+    def test_sync_redis_lock_custom_params(self):
         """Test RedisLock with custom connection params."""
         lock = RedisLock(
             name="custom",
@@ -94,28 +94,28 @@ class TestRedisLockUnit:
         assert lock.db == 2
         assert lock.timeout == 5.0
 
-    def test_redis_lock_empty_name_raises(self):
+    def test_sync_redis_lock_empty_name_raises(self):
         """Test empty name raises ValueError."""
         with pytest.raises(ValueError, match="must not be empty"):
             RedisLock(name="")
 
-    def test_redis_lock_zero_timeout_raises(self):
+    def test_sync_redis_lock_zero_timeout_raises(self):
         """Test zero timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout must be > 0"):
             RedisLock(name="test", timeout=0)
 
-    def test_redis_lock_negative_timeout_raises(self):
+    def test_sync_redis_lock_negative_timeout_raises(self):
         """Test negative timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout must be > 0"):
             RedisLock(name="test", timeout=-1)
 
-    def test_redis_lock_has_token(self):
+    def test_sync_redis_lock_has_token(self):
         """Test lock generates a unique token (via redis-py Lock)."""
         lock = RedisLock(name="token_test")
         # Token is managed internally by redis-py's Lock
         assert lock._acquired is False
 
-    def test_redis_lock_satisfies_protocol(self):
+    def test_sync_redis_lock_satisfies_protocol(self):
         """Test RedisLock satisfies LockProtocol."""
         lock = RedisLock(name="protocol_test")
         assert isinstance(lock, rqlite.LockProtocol)
@@ -125,10 +125,10 @@ class TestRedisLockUnit:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestRedisLockIntegration:
-    """Tests for RedisLock acquire/release with live Redis."""
+class TestSyncRedisLockIntegration:
+    """Tests for SyncRedisLock acquire/release with live Redis."""
 
-    def test_acquire_release_sync(self):
+    def test_sync_redis_lock_acquire_release(self):
         """Test basic acquire and release cycle."""
         lock = RedisLock(name="integration_test", timeout=10.0)
         assert lock.acquire() is True
@@ -136,7 +136,7 @@ class TestRedisLockIntegration:
         lock.release()
         assert lock._acquired is False
 
-    def test_acquire_timeout_non_blocking(self):
+    def test_sync_redis_lock_acquire_timeout_non_blocking(self):
         """Test non-blocking acquire returns False when held."""
         lock1 = RedisLock(name="timeout_test", timeout=10.0)
         lock2 = RedisLock(name="timeout_test", timeout=10.0)
@@ -146,7 +146,7 @@ class TestRedisLockIntegration:
         assert lock2.acquire(blocking=False) is False
         lock1.release()
 
-    def test_acquire_timeout_blocking(self):
+    def test_sync_redis_lock_acquire_timeout_blocking(self):
         """Test blocking acquire raises TimeoutError after timeout."""
         lock1 = RedisLock(name="blocking_test", timeout=10.0)
         lock2 = RedisLock(name="blocking_test", timeout=10.0)
@@ -156,21 +156,21 @@ class TestRedisLockIntegration:
             lock2.acquire(blocking=True, timeout=0.5)
         lock1.release()
 
-    def test_context_manager_sync(self):
+    def test_sync_redis_lock_context_manager(self):
         """Test RedisLock as context manager."""
         lock = RedisLock(name="cm_test", timeout=10.0)
         with lock:
             assert lock._acquired is True
         assert lock._acquired is False
 
-    def test_double_release_safe(self):
+    def test_sync_redis_lock_double_release_safe(self):
         """Test releasing twice doesn't raise."""
         lock = RedisLock(name="double_release_test", timeout=10.0)
         lock.acquire()
         lock.release()
         lock.release()  # Should be safe (no-op)
 
-    def test_acquire_after_release(self):
+    def test_sync_redis_lock_acquire_after_release(self):
         """Test re-acquiring after release works."""
         lock = RedisLock(name="reacquire_test", timeout=10.0)
         assert lock.acquire() is True
@@ -178,12 +178,12 @@ class TestRedisLockIntegration:
         assert lock.acquire() is True
         lock.release()
 
-    def test_release_non_owner_safe(self):
+    def test_sync_redis_lock_release_non_owner_safe(self):
         """Test releasing a lock you don't own is safe (no-op)."""
         lock = RedisLock(name="non_owner_test", timeout=10.0)
         lock.release()  # Should not raise
 
-    def test_different_locks_independent(self):
+    def test_sync_redis_lock_different_locks_independent(self):
         """Test different lock names are independent."""
         lock1 = RedisLock(name="independent_1", timeout=10.0)
         lock2 = RedisLock(name="independent_2", timeout=10.0)
@@ -198,10 +198,10 @@ class TestRedisLockIntegration:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestDistributedSerialization:
+class TestSyncRedisLockDistributedSerialization:
     """Tests proving Redis lock serializes cross-process transactions."""
 
-    def test_distributed_serialization_sync(self):
+    def test_sync_redis_lock_distributed_serialization(self):
         """Multiple threads with RedisLock produce correct final balance.
 
         Without the lock, concurrent reads + writes cause lost updates.
@@ -244,7 +244,7 @@ class TestDistributedSerialization:
 
         def worker(thread_id: int) -> None:
             try:
-                lock = RedisLock(name="distributed_test", timeout=30.0)
+                lock = RedisLock(name="sync_distributed_test", timeout=30.0)
                 conn = rqlite.connect(host="localhost", port=4001, lock=lock)
                 c = conn.cursor()
                 try:
@@ -288,7 +288,7 @@ class TestDistributedSerialization:
             f"lost updates detected! Total deductions: ${initial - final_balance:.2f}"
         )
 
-    def test_redis_lock_with_connection(self):
+    def test_sync_redis_lock_with_connection(self):
         """Use RedisLock with rqlite.connect — full CRUD workflow."""
         lock = RedisLock(name="crud_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
@@ -356,12 +356,12 @@ class TestDistributedSerialization:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestLockWithOperations:
+class TestSyncRedisLockWithOperations:
     """Test that lock works correctly with rqlite operations."""
 
-    def test_lock_suppresses_warnings(self):
+    def test_sync_redis_lock_suppresses_warnings(self):
         """Test RedisLock suppresses transaction SQL warnings."""
-        lock = RedisLock(name="warning_test", timeout=10.0)
+        lock = RedisLock(name="sync_warning_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
@@ -379,9 +379,9 @@ class TestLockWithOperations:
             cursor.close()
             conn.close()
 
-    def test_lock_with_select(self):
+    def test_sync_redis_lock_with_select(self):
         """Test SELECT works under RedisLock."""
-        lock = RedisLock(name="select_test", timeout=10.0)
+        lock = RedisLock(name="sync_select_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
@@ -401,9 +401,9 @@ class TestLockWithOperations:
             cursor.close()
             conn.close()
 
-    def test_lock_with_insert_update_delete(self):
+    def test_sync_redis_lock_with_insert_update_delete(self):
         """Test INSERT/UPDATE/DELETE work under RedisLock."""
-        lock = RedisLock(name="crud_ops_test", timeout=10.0)
+        lock = RedisLock(name="sync_crud_ops_test", timeout=10.0)
         conn = rqlite.connect(host="localhost", port=4001, lock=lock)
         cursor = conn.cursor()
 
@@ -439,7 +439,7 @@ class TestLockWithOperations:
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
-class TestDeadlockPrevention:
+class TestSyncRedisLockDeadlockPrevention:
     """Demonstrate that Redis lock prevents lost updates in concurrent rqlite transactions.
 
     Without a distributed lock, rqlite's queue-based transaction model allows
@@ -450,7 +450,7 @@ class TestDeadlockPrevention:
     ensuring each read sees the most recent committed value.
     """
 
-    def test_no_lock_lost_updates(self):
+    def test_sync_redis_lock_no_lock_lost_updates(self):
         """Without any lock, concurrent transfers produce lost updates (data corruption)."""
         # Setup: create table with initial balance
         conn = rqlite.connect(host="localhost", port=4001)
