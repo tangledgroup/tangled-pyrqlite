@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.5 - 2026-04-18
+
+### Fixed
+
+- **Distributed lock cross-process demo** (`examples/sync_redis_lock_distributed_transfer.py`): Fixed incorrect result collection that masked correct lock serialization. Each worker process no longer reads a stale DB snapshot after its loop; final balance is now read once from the database after all processes complete, correctly verifying data integrity under Redis/Valkey distributed locks.
+
 ## v0.1.4 - 2026-04-18
 
 ### Changed

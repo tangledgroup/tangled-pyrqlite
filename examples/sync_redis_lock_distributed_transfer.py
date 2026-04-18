@@ -112,13 +112,8 @@ def _worker_with_lock(args: tuple) -> dict:
                 )
                 conn.commit()
 
-        # Final read to check result
-        cursor.execute("SELECT balance FROM transfer_accounts WHERE account=?", ("SENDER",))
-        row = cursor.fetchone()
-        assert row is not None
-        final_balance = row[0] if row else None
-
-        return {"final_balance": final_balance, "iterations": iterations}
+        # Return iteration count only — final balance read after pool.join()
+        return {"final_balance": None, "iterations": iterations}
 
     finally:
         cursor.close()
@@ -182,12 +177,21 @@ def run_scenario(
 
     start = time.monotonic()
     with mp.Pool(processes=num_processes) as pool:
-        results = pool.map(func, args_list)
+        pool.map(func, args_list)
     elapsed = time.monotonic() - start
 
-    # Collect results
-    final_balances = [r["final_balance"] for r in results if r["final_balance"] is not None]
-    avg_final = sum(final_balances) / len(final_balances) if final_balances else None
+    # Read final balance from DB once — after all processes have finished
+    check_conn = rqlite.connect(host="localhost", port=4001)
+    check_cursor = check_conn.cursor()
+    try:
+        check_cursor.execute("SELECT balance FROM transfer_accounts WHERE account=?", ("SENDER",))
+        row = check_cursor.fetchone()
+        final_balance = row[0] if row else None
+    finally:
+        check_cursor.close()
+        check_conn.close()
+
+    avg_final = final_balance
     total_deductions = initial_balance - avg_final if avg_final is not None else 0
 
     print("\n  Results:")
