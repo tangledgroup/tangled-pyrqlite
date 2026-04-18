@@ -1,4 +1,3 @@
-# ty: ignore[unresolved-import]
 """Tests for async SQLAlchemy Core and ORM with AioLock.
 
 Covers:
@@ -16,57 +15,34 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-_aiorqlite_available = False
-try:
-    import aiorqlite  # noqa: F401, ty: ignore[unresolved-import]
+# rqlite async dialect is self-contained (uses aiohttp, not aiorqlite)
 
-    _aiorqlite_available = True
-except ImportError:
-    pass
 
-skip_no_aiorqlite = pytest.mark.skipif(
-    not _aiorqlite_available,
-    reason="aiorqlite not installed",
-)
+def run_async(coro):
+    """Helper to run async code in a new event loop."""
+    try:
+        return asyncio.get_running_loop().run_until_complete(coro)
+    except RuntimeError:
+        return asyncio.run(coro)
+
+
+def _create_tables_sync(conn, metadata):
+    """Synchronous table creation callable for run_sync."""
+    metadata.create_all(conn)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.fixture(scope="function")
 def async_engine():
-    """Create async SQLAlchemy engine for rqlite via aiorqlite."""
-    return create_async_engine("rqlite+aiorqlite:///async_test.db", echo=False)
-
-
-@pytest.fixture(scope="function")
-def async_tables(async_engine):
-    """Create and cleanup async test tables."""
-    from sqlalchemy.orm import DeclarativeBase
-
-    class Base(DeclarativeBase):
-        pass
-
-    class AsyncUser(Base):
-        __tablename__ = "async_sa_users"
-        from sqlalchemy.orm import Mapped, mapped_column
-
-        id: Mapped[int] = mapped_column(primary_key=True)
-        name: Mapped[str] = mapped_column(nullable=False)
-        email: Mapped[str | None] = mapped_column(unique=True)
-        age: Mapped[int | None] = mapped_column()
-
-    Base.metadata.drop_all(async_engine)
-    Base.metadata.create_all(async_engine)
-
-    yield
-
-    Base.metadata.drop_all(async_engine)
+    """Create async SQLAlchemy engine for rqlite via aiohttp-based dialect."""
+    return create_async_engine("rqlite+aiorqlite://localhost:4001", echo=False)
 
 
 class TestAsyncSQLAlchemyCore:
     """Test async SQLAlchemy Core operations."""
 
-    @skip_no_aiorqlite
     def test_async_create_tables(self):
         """Test creating tables via async SQLAlchemy."""
+        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
         class Base(DeclarativeBase):
@@ -79,29 +55,32 @@ class TestAsyncSQLAlchemyCore:
             email: Mapped[str | None] = mapped_column(unique=True)
             age: Mapped[int | None] = mapped_column()
 
-        engine = create_async_engine("rqlite+aiorqlite:///async_test_t1.db", echo=False)
+        lock = AioLock()
+        engine = create_async_engine(
+            "rqlite+aiorqlite://localhost:4001",
+            connect_args={"lock": lock},
+            echo=False,
+        )
 
         async def _test():
-            await engine.connect()
-            Base.metadata.create_all(engine)  # ty: ignore[invalid-argument-type]
-
             async with engine.begin() as conn:
+                await conn.run_sync(_create_tables_sync, Base.metadata)
                 result = await conn.execute(
                     text("SELECT name FROM sqlite_master WHERE type='table'")
                 )
                 tables = [row[0] for row in result]
                 assert "async_sa_users_t1" in tables
 
-        asyncio.run(_test())
+        run_async(_test())
         engine.dispose()  # ty: ignore[unused-awaitable]
 
 
 class TestAsyncSQLAlchemyORM:
     """Test async SQLAlchemy ORM operations."""
 
-    @skip_no_aiorqlite
     def test_async_session_add_commit(self):
         """Test adding and committing objects via async Session."""
+        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
         class Base(DeclarativeBase):
@@ -114,25 +93,29 @@ class TestAsyncSQLAlchemyORM:
             email: Mapped[str | None] = mapped_column(unique=True)
             age: Mapped[int | None] = mapped_column()
 
-        engine = create_async_engine("rqlite+aiorqlite:///async_test_t2.db", echo=False)
-        async_session = async_sessionmaker(engine, class_=AsyncSession)
+        lock = AioLock()
+        engine = create_async_engine(
+            "rqlite+aiorqlite://localhost:4001",
+            connect_args={"lock": lock},
+            echo=False,
+        )
+        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
         async def _test():
-            await engine.connect()
-            Base.metadata.create_all(engine)  # ty: ignore[invalid-argument-type]
-
+            async with engine.begin() as conn:
+                await conn.run_sync(_create_tables_sync, Base.metadata)
             async with async_session() as session:
                 user = AsyncUser(name="David", email="david@example.com", age=35)
                 session.add(user)
                 await session.commit()
                 assert user.id is not None
 
-        asyncio.run(_test())
+        run_async(_test())
         engine.dispose()  # ty: ignore[unused-awaitable]
 
-    @skip_no_aiorqlite
     def test_async_session_query(self):
         """Test querying objects via async Session."""
+        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
         class Base(DeclarativeBase):
@@ -145,13 +128,17 @@ class TestAsyncSQLAlchemyORM:
             email: Mapped[str | None] = mapped_column(unique=True)
             age: Mapped[int | None] = mapped_column()
 
-        engine = create_async_engine("rqlite+aiorqlite:///async_test_t3.db", echo=False)
-        async_session = async_sessionmaker(engine, class_=AsyncSession)
+        lock = AioLock()
+        engine = create_async_engine(
+            "rqlite+aiorqlite://localhost:4001",
+            connect_args={"lock": lock},
+            echo=False,
+        )
+        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
         async def _test():
-            await engine.connect()
-            Base.metadata.create_all(engine)  # ty: ignore[invalid-argument-type]
-
+            async with engine.begin() as conn:
+                await conn.run_sync(_create_tables_sync, Base.metadata)
             async with async_session() as session:
                 for name, email in [
                     ("Eve", "eve@example.com"),
@@ -160,7 +147,7 @@ class TestAsyncSQLAlchemyORM:
                     session.add(AsyncUser(name=name, email=email))
                 await session.commit()
 
-        asyncio.run(_test())
+        run_async(_test())
         engine.dispose()  # ty: ignore[unused-awaitable]
 
 
@@ -169,17 +156,17 @@ class TestAsyncSQLAlchemyConnectionURL:
 
     def test_async_basic_url(self):
         """Test basic async connection URL."""
-        engine = create_async_engine("rqlite+aiorqlite:///async_test_url.db")
-        # aiorqlite uses file path, not host/port
-        assert "async_test_url.db" in str(engine.url.database)
+        engine = create_async_engine("rqlite+aiorqlite://localhost:4001")
+        assert engine.url.host == "localhost"
+        assert engine.url.port == 4001
 
 
 class TestAsyncSQLAlchemyReadConsistency:
     """Test read consistency with async SQLAlchemy dialect."""
 
-    @skip_no_aiorqlite
     def test_async_sqlalchemy_default_consistency(self):
         """Test that async SQLAlchemy uses LINEARIZABLE by default."""
+        from rqlite import AioLock
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
         class Base(DeclarativeBase):
@@ -190,22 +177,26 @@ class TestAsyncSQLAlchemyReadConsistency:
             id: Mapped[int] = mapped_column(primary_key=True)
             name: Mapped[str] = mapped_column(nullable=False)
 
-        engine = create_async_engine("rqlite+aiorqlite:///async_test_rc.db", echo=False)
+        lock = AioLock()
+        engine = create_async_engine(
+            "rqlite+aiorqlite://localhost:4001",
+            connect_args={"lock": lock},
+            echo=False,
+        )
 
         async def _test():
-            await engine.connect()
-            Base.metadata.create_all(engine)  # ty: ignore[invalid-argument-type]
-
             async with engine.begin() as conn:
+                await conn.run_sync(_create_tables_sync, Base.metadata)
                 await conn.execute(
                     text("INSERT INTO async_sa_users_rc (name) VALUES (:name)"),
                     {"name": "test"},
                 )
-                await conn.commit()
 
+            # Query after commit in a new connection context
+            async with engine.begin() as conn:
                 result = await conn.execute(text("SELECT * FROM async_sa_users_rc"))
                 rows = result.fetchall()
                 assert len(rows) == 1
 
-        asyncio.run(_test())
+        run_async(_test())
         engine.dispose()  # ty: ignore[unused-awaitable]

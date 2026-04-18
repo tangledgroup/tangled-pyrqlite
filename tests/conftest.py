@@ -9,6 +9,10 @@ pytest_plugins = ("pytest_asyncio",)
 
 # List of all test tables that need cleanup
 TEST_TABLES = [
+    "async_sa_users_rc",
+    "async_sa_users_t1",
+    "async_sa_users_t2",
+    "async_sa_users_t3",
     "comprehensive_test",
     "ctx_test",
     "ctx_test2",

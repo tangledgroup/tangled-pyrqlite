@@ -350,7 +350,6 @@ def complex_workflow(use_lock: bool = False):
             ("Monitor Stand",),
         )
         row = cursor.fetchone()
-        assert row is not None
         if row is None:
             print("  Monitor Stand not found (successfully deleted)")
             print("✓ Non-existent query returns None as expected")
