@@ -10,7 +10,7 @@ A pure Python client for [rqlite](https://rqlite.io/) distributed SQLite cluster
 - **DB-API 2.0** - Standard Python database API (PEP 249)
 - **SQLAlchemy dialect** - Full ORM support via SQLAlchemy 2.0
 - **Parameterized queries** - Safe, SQL injection-proof query execution
-- **Serializable transaction support** - Atomic batch operations using locking mechanism - bring your own distributed locking implementation Redis, Valkey, etcd3
+- **Serializable transaction support** - Atomic batch operations using locking mechanism — bring your own distributed locking implementation (Redis, Valkey)
 
 ## Installation
 
@@ -687,26 +687,30 @@ uv run ty check
 ```
 rqlite/
 ├── __init__.py              # Package init, exports
-├── connection.py            # Connection class (DB-API 2.0)
-├── cursor.py                # Cursor class (DB-API 2.0)
-├── types.py                 # Type helpers & sync locks
+├── connection.py            # Connection class (DB-API 2.0 sync)
+├── cursor.py                # Cursor class (DB-API 2.0 sync)
+├── types.py                 # Type helpers & sync locks (ThreadLock, LockProtocol)
 ├── exceptions.py            # Exception classes
-├── redis_lock.py            # Redis distributed lock (sync)
-├── async_redis_lock.py      # Async Redis distributed lock
 ├── async_connection.py      # Async Connection class
 ├── async_cursor.py          # Async Cursor class
-└── async_types.py           # Async locks
-    └── sqlalchemy/           # SQLAlchemy dialect
-        ├── __init__.py       # Dialect exports
-        ├── dialect.py        # RQLiteDialect implementation
-        └── async_dialect.py  # AioRQLiteDialect implementation
+├── async_types.py           # Async locks (AioLock, AsyncLockProtocol)
+├── redis_lock.py            # Redis distributed lock (sync, RedisLock)
+├── async_redis_lock.py      # Async Redis distributed lock (AioRedisLock)
+├── valkey_lock.py           # Valkey distributed lock (sync, ValkeyLock)
+├── async_valkey_lock.py     # Async Valkey distributed lock (AioValkeyLock)
+└── sqlalchemy/              # SQLAlchemy dialect
+    ├── __init__.py          # Dialect exports
+    ├── dialect.py           # RQLiteDialect implementation (sync)
+    └── async_dialect.py     # AioRQLiteDialect implementation (async)
 ```
 
 ## References
 
-- [rqlite](https://rqlite.io)
-- [Python DB-API 2.0 (PEP 249)](https://www.python.org/dev/peps/pep-0249/)
-- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
+- [rqlite](https://rqlite.io) — Distributed SQLite database
+- [Python DB-API 2.0 (PEP 249)](https://www.python.org/dev/peps/pep-0249/) — Python database API specification
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/) — Python SQL toolkit and ORM
+- [Redis](https://github.com/redis/redis) — Redis in-memory data store (distributed locking)
+- [Valkey](https://github.com/valkey-io/valkey) — Valkey in-memory data store (distributed locking, Redis-compatible)
 
 ## License
 
