@@ -1,6 +1,6 @@
 [project]
 name = "tangled-pyrqlite"
-version = "0.1.0"
+version = "0.1.1"
 description = "DB-API 2.0 client and SQLAlchemy dialect for rqlite distributed SQLite clusters"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -9,6 +9,13 @@ dependencies = [
     "aiohttp>=3.9.0",
     "sqlalchemy>=2.0.49",
 ]
+
+[project.urls]
+# Homepage = "https://example.com"
+# Documentation = "https://readthedocs.org"
+Repository = "https://github.com/tangledgroup/tangled-pyrqlite"
+Issues = "https://github.com/tangledgroup/tangled-pyrqlite/issues"
+Changelog = "https://github.com/tangledgroup/tangled-pyrqlite/blob/main/CHANGELOG.md"
 
 [project.entry-points."sqlalchemy.dialects"]
 rqlite = "rqlite.sqlalchemy.dialect:RQLiteDialect"

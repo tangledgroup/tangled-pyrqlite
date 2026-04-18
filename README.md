@@ -8,8 +8,8 @@ A pure Python client for [rqlite](https://rqlite.io/) distributed SQLite cluster
 
 - **DB-API 2.0** - Standard Python database API (PEP 249)
 - **SQLAlchemy dialect** - Full ORM support via SQLAlchemy 2.0
-- **Transaction support** - Atomic batch operations with rqlite's transaction model
 - **Parameterized queries** - Safe, SQL injection-proof query execution
+- **Serializable transaction support** - Atomic batch operations using locking mechanism - bring your own distributed locking implementation Redis, Valkey, etcd3
 
 ## Installation
 
@@ -214,6 +214,7 @@ engine = create_engine("rqlite://localhost:4001?read_consistency=weak")
 
 # Via connect_args
 from rqlite import ReadConsistency
+
 engine = create_engine(
     "rqlite://localhost:4001",
     connect_args={"read_consistency": ReadConsistency.WEAK}
@@ -263,34 +264,9 @@ rqlite's transaction model differs from traditional databases:
 
 ### Important Limitations
 
-⚠️ **Cannot use SELECT results within transactions**
-
-```python
-# This does NOT work as expected:
-cursor.execute("SELECT MAX(id) FROM users")
-max_id = cursor.fetchone()[0]  # Returns None! Results not available yet
-cursor.execute("INSERT INTO users (id, name) VALUES (?, ?)", (max_id + 1, "New"))
-conn.commit()  # SELECT results only available AFTER commit
-```
-
-**Workaround**: Execute SELECT outside transaction:
-
-```python
-# Get max ID first (outside transaction)
-cursor.execute("SELECT COALESCE(MAX(id), 0) FROM users")
-max_id = cursor.fetchone()[0]
-conn.commit()  # Commit the SELECT
-
-# Then insert in new transaction
-cursor.execute("INSERT INTO users (id, name) VALUES (?, ?)", (max_id + 1, "New"))
-conn.commit()
-```
-
-### Other Limitations
-
 - ❌ No savepoints
 - ⚠️ Explicit `BEGIN`/`COMMIT`/`ROLLBACK` SQL is ignored (use Python API)
-- ❌ No transaction isolation levels
+- ❌ No native transaction isolation levels
 - ⚠️ `rowcount` not available for SELECT statements
 
 ## Connection URLs
@@ -317,6 +293,7 @@ conn = rqlite.connect(host="localhost", port=4001, read_consistency="weak")
 
 # Or using the enum:
 from rqlite import ReadConsistency
+
 conn = rqlite.connect(
     host="localhost",
     port=4001,
@@ -325,6 +302,7 @@ conn = rqlite.connect(
 
 # With lock for transaction support (suppresses warnings)
 from rqlite import ThreadLock
+
 conn = rqlite.connect(
     host="localhost",
     port=4001,
@@ -359,6 +337,7 @@ engine = create_engine("rqlite://localhost:4001?read_consistency=weak")
 
 # Custom read consistency via connect_args
 from rqlite import ReadConsistency
+
 engine = create_engine(
     "rqlite://localhost:4001",
     connect_args={"read_consistency": ReadConsistency.WEAK}
@@ -366,6 +345,7 @@ engine = create_engine(
 
 # With lock for transaction support (via connect_args)
 from rqlite import ThreadLock
+
 engine = create_engine(
     "rqlite://localhost:4001",
     connect_args={"lock": ThreadLock()}
@@ -529,7 +509,12 @@ class MyLock:
     def acquire(self, blocking=True, timeout=-1): return True
     def release(self): pass
     def __enter__(self): return self
-    def __exit__(self, *args): pass
+    def __exit__(
+        self,
+        exc_type: type[Exception] | None,
+        exc_val: Exception | None,
+        exc_tb: object,
+    ) -> None: pass
 
 conn = rqlite.connect(lock=MyLock())
 ```
@@ -574,14 +559,14 @@ lock = ThreadLock()
 ### Setup
 
 ```bash
-cd rqlite
 uv sync
 ```
 
 ### Run Tests
 
 ```bash
-# Start rqlite first
+# Start fresh rqlite first
+podman rm -f rqlite-test
 podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
 
 # Run tests
@@ -614,8 +599,7 @@ rqlite/
 
 ## References
 
-- [rqlite Documentation](https://rqlite.io/docs/)
-- [rqlite HTTP API](https://rqlite.io/docs/api/)
+- [rqlite](https://rqlite.io)
 - [Python DB-API 2.0 (PEP 249)](https://www.python.org/dev/peps/pep-0249/)
 - [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
 
