@@ -319,6 +319,95 @@ conn = rqlite.connect(
 )
 ```
 
+### Redis Distributed Lock (optional)
+
+For **true cross-process transaction serialization**, use the built-in Redis-backed locks.
+Install with the `redis` extra:
+
+```bash
+uv add tangled-pyrqlite[redis]
+```
+
+Start a Redis server:
+
+```bash
+podman rm -f redis-test
+podman run -d --name redis-test -p 6379:6379 docker.io/redis
+```
+
+**Sync DB-API 2.0 with RedisLock:**
+
+```python
+import rqlite
+from rqlite import RedisLock
+
+# Connect with Redis distributed lock
+lock = RedisLock(name="transfer", timeout=10.0)
+conn = rqlite.connect(host="localhost", port=4001, lock=lock)
+cursor = conn.cursor()
+
+# Use lock for serialized bank transfer
+with lock:
+    cursor.execute("SELECT balance FROM accounts WHERE id=?", (1,))
+    balance = cursor.fetchone()[0]
+    cursor.execute("UPDATE accounts SET balance=? WHERE id=?", (balance - 100, 1))
+    conn.commit()
+```
+
+**Async DB-API 2.0 with AioRedisLock:**
+
+```python
+import asyncio
+import rqlite
+from rqlite import AioRedisLock
+
+async def transfer():
+    lock = AioRedisLock(name="transfer", timeout=10.0)
+    conn = rqlite.async_connect(lock=lock)
+    cursor = await conn.cursor()
+
+    async with lock:
+        await cursor.execute("SELECT balance FROM accounts WHERE id=?", (1,))
+        balance = cursor.fetchone()[0]
+        await cursor.execute(
+            "UPDATE accounts SET balance=? WHERE id=?",
+            (balance - 100, 1),
+        )
+        await conn.commit()
+
+    await cursor.close()
+    await conn.close()
+
+asyncio.run(transfer())
+```
+
+**SQLAlchemy with RedisLock:**
+
+```python
+from sqlalchemy import create_engine
+from rqlite import RedisLock
+
+lock = RedisLock(name="sa_lock", timeout=10.0)
+engine = create_engine(
+    "rqlite://localhost:4001",
+    connect_args={"lock": lock}
+)
+```
+
+**Available locks:**
+
+| Lock | Sync/Async | Scope | Use case |
+|------|-----------|-------|----------|
+| `ThreadLock` | sync | In-process threads | Single process, thread-safe transactions |
+| `threading.Lock` | sync | In-process threads | Direct stdlib lock |
+| **`RedisLock`** | **sync** | **Cross-process (distributed)** | Multi-process, ACID isolation |
+| `AioLock` | async | In-process tasks | Single process, async-safe transactions |
+| **`AioRedisLock`** | **async** | **Cross-process (distributed)** | Multi-process async, ACID isolation |
+
+For full examples see: `examples/redis_lock_sync.py`, `examples/redis_lock_async.py`,
+`examples/distributed_transfer.py`.
+```
+
 ### SQLAlchemy
 
 **Note:** For SQLAlchemy, custom parameters like `read_consistency` and `lock` must be passed via `connect_args` dictionary, not directly to `create_engine()`. This is because SQLAlchemy validates kwargs before passing them to the dialect.
@@ -419,8 +508,14 @@ The `-B` flag disables byte-code generation for cleaner output.
 
 ### Example Files
 
-- `basic_usage.py` - DB-API 2.0 CRUD operations
-- `sqlalchemy_orm.py` - SQLAlchemy ORM usage
+| File | Description |
+|------|-------------|
+| `basic_usage.py` | DB-API 2.0 CRUD operations |
+| `async_basic_usage.py` | Async DB-API 2.0 examples |
+| `sqlalchemy_orm.py` | SQLAlchemy ORM usage |
+| `redis_lock_sync.py` | Sync Redis distributed lock examples |
+| `redis_lock_async.py` | Async Redis distributed lock examples |
+| `distributed_transfer.py` | Cross-process bank transfer demo (proves Redis lock works) |
 
 ### Locking Mechanism
 
@@ -588,14 +683,20 @@ uv run ty check
 
 ```
 rqlite/
-├── __init__.py           # Package init, exports
-├── connection.py         # Connection class (DB-API 2.0)
-├── cursor.py             # Cursor class (DB-API 2.0)
-├── types.py              # Type helpers
-├── exceptions.py         # Exception classes
-└── sqlalchemy/           # SQLAlchemy dialect
-    ├── __init__.py       # Dialect exports
-    └── dialect.py        # RQLiteDialect implementation
+├── __init__.py              # Package init, exports
+├── connection.py            # Connection class (DB-API 2.0)
+├── cursor.py                # Cursor class (DB-API 2.0)
+├── types.py                 # Type helpers & sync locks
+├── exceptions.py            # Exception classes
+├── redis_lock.py            # Redis distributed lock (sync)
+├── async_redis_lock.py      # Async Redis distributed lock
+├── async_connection.py      # Async Connection class
+├── async_cursor.py          # Async Cursor class
+└── async_types.py           # Async locks
+    └── sqlalchemy/           # SQLAlchemy dialect
+        ├── __init__.py       # Dialect exports
+        ├── dialect.py        # RQLiteDialect implementation
+        └── async_dialect.py  # AioRQLiteDialect implementation
 ```
 
 ## References

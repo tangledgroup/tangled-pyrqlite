@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.2 - 2026-04-18
+
+### Added
+
+- **Redis distributed locks** (`RedisLock` sync, `AioRedisLock` async) — wraps redis-py's `redis.lock.Lock` and `redis.asyncio.lock.Lock` for cross-process transaction serialization. Requires optional `[redis]` extra.
+- Distributed serialization tests demonstrating correct final balance under concurrent access with Redis lock vs race conditions without it.
+
+### Fixed
+
+- Documentation: removed spurious `await` from `rqlite.async_connect()` in README and module docstrings (`async_connect` returns `AsyncConnection` directly, not a coroutine).
+
 ## v0.1.1 - 2026-04-18
 
 ### Changed

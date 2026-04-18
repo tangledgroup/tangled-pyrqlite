@@ -36,7 +36,7 @@ DB-API 2.0 Example (Async):
     >>> import rqlite
     >>> from rqlite import AioLock
     >>> async def main():
-    ...     conn = await rqlite.async_connect(host="localhost", port=4001, lock=AioLock())
+    ...     conn = rqlite.async_connect(host="localhost", port=4001, lock=AioLock())
     ...     cursor = await conn.cursor()
     ...     await cursor.execute("SELECT * FROM users")
     ...     rows = cursor.fetchall()
@@ -52,6 +52,8 @@ SQLAlchemy Usage (Async):
     >>> engine = create_async_engine("sqlite+aiorqlite://localhost:4001")
 """
 
+
+from typing import Any
 
 from .async_connection import AsyncConnection, async_connect
 from .async_cursor import AsyncCursor
@@ -129,6 +131,22 @@ __all__ = [
     "AsyncLockProtocol",
     "AsyncLock",
     "AioLock",
+    # Redis distributed locks (lazy import)
+    "RedisLock",
+    "AioRedisLock",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    """Lazy import for optional redis-dependent classes."""
+    if name == "RedisLock":
+        from .redis_lock import RedisLock as _RedisLock
+
+        return _RedisLock
+    if name == "AioRedisLock":
+        from .async_redis_lock import AioRedisLock as _AioRedisLock
+
+        return _AioRedisLock
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __version__ = "0.1.0"
