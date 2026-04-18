@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.1 - 2026-04-18
+
+### Changed
+
+- Clarified transaction support as serializable with a locking mechanism.
+
+### Fixed
+
+- Documentation: added blank lines before imports in code examples (PEP 8).
+- Documentation: modernized `__exit__` type annotations.
+- Documentation: updated test setup to use podman directly with clean state.
+
+### Added
+
+- `[project.urls]` metadata (Repository, Issues, Changelog) to `pyproject.toml`.
+
+
 ## v0.1.0 - 2026-04-17
 
 ### Added
