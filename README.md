@@ -1,6 +1,7 @@
 # tangled-pyrqlite - python client
 
-[![Downloads](https://img.shields.io/pypi/dm/tangled-pyrqlite)](https://pypistats.org/packages/tangled-pyrqlite)
+[![PyPI](https://img.shields.io/pypi/v/tangled-pyrqlite)](https://pypi.org/project/tangled-pyrqlite/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/tangled-pyrqlite)](https://pypistats.org/packages/tangled-pyrqlite)
 [![Supported Versions](https://img.shields.io/pypi/pyversions/tangled-pyrqlite)](https://pypi.org/project/tangled-pyrqlite)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
