@@ -1,25 +1,23 @@
 [project]
 name = "tangled-pyrqlite"
-version = "0.1.3"
+version = "0.1.4a"
 description = "DB-API 2.0 client and SQLAlchemy dialect for rqlite distributed SQLite clusters"
 authors = [
     { name = "Tangled", email = "noreply@tangledgroup.com" },
     { name = "Marko Tasic", email = "mtasic85@gmail.com" },
 ]
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
 keywords = [ "rqlite", "tangled-rqlite", "sqlite" ]
 classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
-
-    "License :: OSI Approved :: MIT License",
-
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "requests>=2.33.1",
