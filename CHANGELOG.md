@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.6 - 2026-04-19
+
+### Added
+
+- **Valkey lock CRUD examples in README** — four self-contained, copy-paste runnable code blocks under `## Examples` demonstrating the full lifecycle (CREATE TABLE IF NOT EXISTS → INSERT → SELECT → UPDATE → SELECT → DELETE → SELECT ALL) using `ValkeyLock`, `AioValkeyLock`, sync SQLAlchemy ORM, and async SQLAlchemy ORM.
+
 ## v0.1.5 - 2026-04-18
 
 ### Fixed

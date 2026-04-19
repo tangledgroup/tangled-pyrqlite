@@ -257,6 +257,7 @@ class Product(Base):
 
 # Create engine with Valkey distributed lock
 lock = ValkeyLock(name="readme_sa_sync", timeout=10.0)
+
 engine = create_engine(
     "rqlite://localhost:4001",
     connect_args={"lock": lock},
@@ -333,14 +334,16 @@ class Product(Base):
 
 # Create async engine with AioValkey distributed lock
 lock = AioValkeyLock(name="readme_sa_async", timeout=10.0)
+
 engine = create_async_engine(
     "rqlite+aiorqlite://localhost:4001",
     connect_args={"lock": lock},
 )
-session_local = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 async def main():
-    async with session_local() as session:
+    async with Session() as session:
         # 1. CREATE TABLE IF NOT EXISTS (raw SQL — model not yet in DB)
         await session.execute(text("""
             CREATE TABLE IF NOT EXISTS readme_products (
