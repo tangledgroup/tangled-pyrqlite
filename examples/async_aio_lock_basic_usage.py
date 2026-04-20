@@ -42,6 +42,7 @@ def print_docstring(func: Callable) -> Callable:
             print(f"\n{'─' * 60}")
             print(f"📝 {func.__name__}: {func.__doc__.strip()}")
             print("─" * 60)
+
         return await func(*args, **kwargs)
 
     return wrapper

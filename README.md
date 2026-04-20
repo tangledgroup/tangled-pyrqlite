@@ -83,6 +83,14 @@ podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey:latest
 ### Sync DB-API 2.0 with ValkeyLock
 
 ```python
+# uv add tangled-pyrqlite[valkey]
+#
+# podman rm -f rqlite-test
+# podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
+#
+# podman rm -f valkey-test
+# podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey:latest
+
 import rqlite
 from rqlite import ValkeyLock
 
@@ -160,6 +168,14 @@ finally:
 ### Async DB-API 2.0 with AioValkeyLock
 
 ```python
+# uv add tangled-pyrqlite[valkey]
+#
+# podman rm -f rqlite-test
+# podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
+#
+# podman rm -f valkey-test
+# podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey:latest
+
 import asyncio
 import rqlite
 from rqlite import AioValkeyLock
@@ -241,6 +257,14 @@ asyncio.run(main())
 ### Sync SQLAlchemy ORM 2.0 with ValkeyLock
 
 ```python
+# uv add tangled-pyrqlite[valkey]
+#
+# podman rm -f rqlite-test
+# podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
+#
+# podman rm -f valkey-test
+# podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey:latest
+
 from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from rqlite import ValkeyLock
@@ -311,6 +335,14 @@ with Session(engine) as session:
 ### Async SQLAlchemy ORM 2.0 with AioValkeyLock
 
 ```python
+# uv add tangled-pyrqlite[valkey]
+#
+# podman rm -f rqlite-test
+# podman run -d --name rqlite-test -p 4001:4001 docker.io/rqlite/rqlite
+#
+# podman rm -f valkey-test
+# podman run -d --name valkey-test -p 6379:6379 docker.io/valkey/valkey:latest
+
 import asyncio
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import (
