@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.1.7 - 2026-06-10
+
+### Added
+
+- **BLOB column type support** — full round-trip for `Binary`/`LargeBinary`/`BLOB` columns between rqlite and Python. Uses `blob_array` query parameter so BLOB data is returned as integer arrays (unambiguous) and decoded back to Python `bytes`. Covers sync DB-API, async DB-API, sync SQLAlchemy ORM, and async SQLAlchemy ORM.
+- **DB-API 2.0 `Binary()` constructor** — exposed on both sync (`rqlite.Binary`) and async (`AioRQLiteDBAPI.Binary`) modules, matching `sqlite3.Binary` behavior. Required by SQLAlchemy's `LargeBinary.bind_processor()`.
+- **BLOB test suite** — `tests/test_blob_dbapi.py` (22 tests) and `tests/test_blob_sqlalchemy.py` (14 tests) covering insert, select, update, empty BLOB, large BLOB (>1KB), multiple rows, and async variants.
+- **BLOB examples** — `examples/blob_basic_usage.py` (raw DB-API) and `examples/blob_sqlalchemy_orm.py` (SQLAlchemy ORM).
+
+### Changed
+
+- **Updated dependencies** for rqlite 10.2.0 compatibility.
+- **`adapt_value(bytes)` serialization** — changed from hex string (`value.hex()`) to JSON integer array (`list(value)`) matching rqlite's BLOB parameter format.
+- **Cursor read path** — SELECT queries now include `blob_array=true` and `_parse_result()` decodes BLOB integer arrays back to Python `bytes` for both sync and async cursors.
+
+### Fixed
+
+- **`AttributeError: 'AioRQLiteDBAPI' object has no attribute 'Binary'`** — SQLAlchemy's `LargeBinary` type calls `dialect.dbapi.Binary`; added the missing constructor to both dialects.
+- **BLOB data stored as TEXT** — bytes were serialized as hex strings which rqlite interpreted as TEXT; now sent as integer arrays so rqlite stores them as actual BLOBs.
+- **BLOB read ambiguity** — default base64 encoding made it impossible to distinguish text from blob; `blob_array` parameter resolves this.
+
 ## v0.1.6 - 2026-04-19
 
 ### Added
