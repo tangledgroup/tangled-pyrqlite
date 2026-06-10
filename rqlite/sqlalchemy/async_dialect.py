@@ -104,7 +104,7 @@ from rqlite.exceptions import (
     OperationalError,
     ProgrammingError,
 )
-from rqlite.types import ReadConsistency
+from rqlite.types import Binary, ReadConsistency
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -420,6 +420,9 @@ class AioRQLiteDBAPI(AsyncAdapt_dbapi_module):
         self.ProgrammingError = ProgrammingError  # type: ignore[assignment,invalid-assignment]
         self.InterfaceError = InterfaceError  # type: ignore[assignment,invalid-assignment]
         self.NotSupportedError = NotSupportedError  # type: ignore[assignment,invalid-assignment]
+
+        # Binary constructor (DB-API 2.0, required by SQLAlchemy LargeBinary)
+        self.Binary = Binary  # type: ignore[assignment,invalid-assignment]
 
         # SQLite compatibility (required by SQLAlchemy SQLite dialect base)
         self.sqlite_version_info = (3, 45, 0)

@@ -73,6 +73,7 @@ from .exceptions import (
 )
 from .types import (
     BINARY,
+    Binary,
     DATETIME,
     NUMBER,
     ROWID,
@@ -115,6 +116,7 @@ __all__ = [
     # Types (DB-API 2.0)
     "STRING",
     "BINARY",
+    "Binary",
     "NUMBER",
     "DATETIME",
     "ROWID",

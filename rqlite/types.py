@@ -72,6 +72,26 @@ def TimestampFromTicks(ticks: float) -> datetime.datetime:  # noqa: N802
     return datetime.datetime.fromtimestamp(ticks)
 
 
+def Binary(string: bytes | bytearray | memoryview) -> memoryview:  # noqa: N802
+    """Construct a binary object from a bytes-like object (DB-API 2.0).
+
+    This is the DB-API 2.0 constructor required by PEP 249. SQLAlchemy's
+    LargeBinary type uses dialect.dbapi.Binary to wrap byte data before
+    sending it to the driver.
+
+    Args:
+        string: Bytes-like object to wrap.
+
+    Returns:
+        A memoryview of the input data (matching sqlite3.Binary behavior).
+
+    Example:
+        >>> Binary(b'hello')
+        <memory at 0x...>
+    """
+    return memoryview(string)
+
+
 # Type objects for DB-API 2.0 compliance
 STRING = str
 BINARY = bytes
@@ -270,9 +290,14 @@ def adapt_value(value: Any) -> Any:
         return None
     if isinstance(value, (int, float, str)):
         return value
+    if isinstance(value, (memoryview, bytearray)):
+        # Send as JSON array of byte integers — rqlite interprets this as BLOB.
+        # Per https://rqlite.io/docs/api/api/#blob-data: [83,81,76,105,116,101]
+        return list(value)
     if isinstance(value, bytes):
-        # Encode bytes as hex string for BLOB support
-        return value.hex()
+        # Send as JSON array of byte integers — rqlite interprets this as BLOB.
+        # Per https://rqlite.io/docs/api/api/#blob-data: [83,81,76,105,116,101]
+        return list(value)
     if isinstance(value, datetime.datetime):
         return value.isoformat()
     if isinstance(value, datetime.date):

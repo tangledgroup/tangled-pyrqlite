@@ -295,6 +295,10 @@ class Cursor:
         sql_upper = sql.upper().strip()
         if sql_upper.startswith("SELECT"):
             params_dict["level"] = self.connection.read_consistency.to_query_param()
+            # Request blob_array so BLOBs come back as [int, int, ...] arrays
+            # instead of base64 strings — avoids ambiguity with text columns.
+            # See: https://rqlite.io/docs/api/api/#blob-data
+            params_dict["blob_array"] = "true"
 
         if params_dict:
             url += "?" + "&".join(f"{k}={v}" for k, v in params_dict.items())
@@ -348,22 +352,44 @@ class Cursor:
         if "columns" in result:
             # SELECT query - could have values, rows, or neither (empty result)
             columns = result["columns"]
+            col_types = result.get("types", [])
 
             # Set description regardless of whether there are results
             self.description = [
                 (col, rtype, None, None, None, None, True)
-                for col, rtype in zip(columns, result.get("types", []), strict=False)
+                for col, rtype in zip(columns, col_types, strict=False)
             ]
+
+            # Identify which columns are BLOB type (with blob_array=true,
+            # these come back as JSON arrays of integers)
+            blob_cols = {
+                columns[i]
+                for i, t in enumerate(col_types)
+                if t and t.lower() == "blob"
+            }
 
             if "values" in result:
                 # Array format (default)
                 values = result.get("values", [])
-                self._results = [
-                    dict(zip(columns, row, strict=False)) for row in values
-                ]
+                self._results = []
+                for row in values:
+                    decoded = dict(zip(columns, row, strict=False))
+                    for col in blob_cols:
+                        val = decoded.get(col)
+                        if isinstance(val, list):
+                            decoded[col] = bytes(val)
+                    self._results.append(decoded)
             elif "rows" in result:
                 # Associative format (?associative=true)
-                self._results = result.get("rows", [])
+                raw_rows = result.get("rows", [])
+                self._results = []
+                for row in raw_rows:
+                    decoded = dict(row)
+                    for col in blob_cols:
+                        val = decoded.get(col)
+                        if isinstance(val, list):
+                            decoded[col] = bytes(val)
+                    self._results.append(decoded)
             else:
                 # Empty result set
                 self._results = []

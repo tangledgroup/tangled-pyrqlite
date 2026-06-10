@@ -1,6 +1,6 @@
 [project]
 name = "tangled-pyrqlite"
-version = "0.1.7a0"
+version = "0.1.7"
 description = "DB-API 2.0 client and SQLAlchemy dialect for rqlite distributed SQLite clusters"
 authors = [
     { name = "Tangled", email = "noreply@tangledgroup.com" },
@@ -9,7 +9,7 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
-keywords = [ "rqlite", "tangled-rqlite", "sqlite" ]
+keywords = [ "rqlite", "aiorqlite", "sqlite", "aiosqlite", "tangled-rqlite" ]
 classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python :: 3",
@@ -20,9 +20,9 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "requests>=2.33.1",
-    "aiohttp>=3.9.0",
-    "sqlalchemy>=2.0.49",
+    "requests>=2.34.2",
+    "aiohttp>=3.14.1",
+    "sqlalchemy>=2.0.50",
 ]
 
 [project.urls]
@@ -37,18 +37,18 @@ rqlite = "rqlite.sqlalchemy.dialect:RQLiteDialect"
 "rqlite.aiorqlite" = "rqlite.sqlalchemy.async_dialect:AioRQLiteDialect"
 
 [project.optional-dependencies]
-redis = ["redis>=7.4.0"]
+redis = ["redis>=8.0.0"]
 valkey = ["valkey>=6.1.1"]
 
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
-    "pytest-asyncio>=0.21.0",
+    "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
-    "redis>=7.4.0",
+    "redis>=8.0.0",
     "valkey>=6.1.1",
-    "ruff>=0.15.10",
-    "ty>=0.0.29",
+    "ruff>=0.15.16",
+    "ty>=0.0.46",
 ]
 
 [tool.ruff]
