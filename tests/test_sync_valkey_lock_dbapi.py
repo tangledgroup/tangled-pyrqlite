@@ -249,7 +249,8 @@ class TestSyncValkeyLockComplexWorkflow:
 
             # Step 4: SELECT FEW (filter)
             cursor.execute(
-                "SELECT name, value FROM sync_valkey_lock_test_items WHERE active = ? AND value > ?",
+                "SELECT name, value FROM sync_valkey_lock_test_items "
+                "WHERE active = ? AND value > ?",
                 (1, 150),
             )
             rows = cursor.fetchall()

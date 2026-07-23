@@ -113,7 +113,7 @@ def async_engine():
         echo=False,
     )
     yield engine
-    run_async(engine.dispose())  # ty: ignore[unused-awaitable]
+    run_async(engine.dispose())
 
 
 # ---------------------------------------------------------------------------

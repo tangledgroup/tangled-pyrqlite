@@ -15,7 +15,6 @@ Usage:
 import pytest
 
 import rqlite
-from rqlite import ThreadLock
 
 
 @pytest.fixture(scope="function")

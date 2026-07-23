@@ -22,7 +22,6 @@ from sqlalchemy import delete, insert, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-import rqlite
 from rqlite import AioValkeyLock
 
 
@@ -692,7 +691,7 @@ class TestAsyncValkeyLockSQLAlchemyEngineConfig:
         async def _test():
             async with engine.connect() as conn:
                 raw = await conn.get_raw_connection()
-                rqlite_conn = raw.driver_connection
+                rqlite_conn = raw.driver_connection  # type: ignore[union-attr]
                 assert rqlite_conn._lock is not None
                 assert isinstance(rqlite_conn._lock, AioValkeyLock)
 
@@ -711,7 +710,7 @@ class TestAsyncValkeyLockSQLAlchemyEngineConfig:
         async def _test():
             async with engine.connect() as conn:
                 raw = await conn.get_raw_connection()
-                rqlite_conn = raw.driver_connection
+                rqlite_conn = raw.driver_connection  # type: ignore[union-attr]
                 assert rqlite_conn._lock is lock
 
         run_async(_test())

@@ -27,7 +27,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-import rqlite
 from rqlite import ValkeyLock
 
 
