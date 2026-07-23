@@ -65,7 +65,7 @@ def cleanup_after_redis_test():
     _cleanup_test_tables()
 
 
-# ── Unit Tests (no Redis needed) ───────────────────────────────────────
+# Unit Tests (no Redis needed)
 
 
 class TestSyncRedisLockUnit:
@@ -121,7 +121,7 @@ class TestSyncRedisLockUnit:
         assert isinstance(lock, rqlite.LockProtocol)
 
 
-# ── Integration Tests (Redis required) ─────────────────────────────────
+# Integration Tests (Redis required)
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")
@@ -194,7 +194,7 @@ class TestSyncRedisLockIntegration:
         lock2.release()
 
 
-# ── Distributed Serialization Tests (Redis + rqlite required) ──────────
+# Distributed Serialization Tests (Redis + rqlite required)
 
 
 @pytest.mark.skipif(not _has_redis(), reason="Redis not available")

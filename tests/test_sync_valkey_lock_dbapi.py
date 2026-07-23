@@ -39,7 +39,7 @@ def _has_valkey() -> bool:
 skip_if_no_valkey = pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
 
 
-# ── Connection Tests ──────────────────────────────────────────────────────
+# Connection Tests
 
 
 @skip_if_no_valkey
@@ -136,7 +136,7 @@ class TestSyncValkeyLockConnectionTimeout:
         conn.close()
 
 
-# ── Read Consistency Tests ────────────────────────────────────────────────
+# Read Consistency Tests
 
 
 @skip_if_no_valkey
@@ -199,7 +199,7 @@ class TestSyncValkeyLockReadConsistency:
         conn.close()
 
 
-# ── Complex Workflow Tests ────────────────────────────────────────────────
+# Complex Workflow Tests
 
 
 @skip_if_no_valkey
@@ -343,7 +343,7 @@ class TestSyncValkeyLockComplexWorkflow:
             conn.close()
 
 
-# ── Empty Result Set Tests ────────────────────────────────────────────────
+# Empty Result Set Tests
 
 
 @skip_if_no_valkey
@@ -387,7 +387,7 @@ class TestSyncValkeyLockEmptyResults:
             conn.close()
 
 
-# ── Warning Suppression Tests ─────────────────────────────────────────────
+# Warning Suppression Tests
 
 
 @skip_if_no_valkey
@@ -455,7 +455,7 @@ class TestSyncValkeyLockWarnings:
         conn.close()
 
 
-# ── Lock Configuration Tests ──────────────────────────────────────────────
+# Lock Configuration Tests
 
 
 @skip_if_no_valkey

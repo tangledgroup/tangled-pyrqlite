@@ -32,7 +32,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from rqlite import ValkeyLock
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _has_valkey() -> bool:
@@ -65,7 +65,7 @@ def _make_engine(
     pass  # Factory pattern: callers build inline
 
 
-# ── ORM Base ───────────────────────────────────────────────────────────────
+# ORM Base
 
 
 class Base(DeclarativeBase):
@@ -91,7 +91,7 @@ class Product(Base):
     quantity: Mapped[int] = mapped_column(Integer, default=0)
 
 
-# ── Engine Tests ───────────────────────────────────────────────────────────
+# Engine Tests
 
 
 @skip_if_no_valkey
@@ -145,7 +145,7 @@ class TestSyncSA_Engine:
         engine.dispose()
 
 
-# ── Core Tests ─────────────────────────────────────────────────────────────
+# Core Tests
 
 
 @skip_if_no_valkey
@@ -339,7 +339,7 @@ class TestSyncSA_Core:
         engine.dispose()
 
 
-# ── ORM Tests ──────────────────────────────────────────────────────────────
+# ORM Tests
 
 
 @skip_if_no_valkey
@@ -533,7 +533,7 @@ class TestSyncSA_ORM:
             engine.dispose()
 
 
-# ── Reflection Tests ───────────────────────────────────────────────────────
+# Reflection Tests
 
 
 @skip_if_no_valkey
@@ -595,7 +595,7 @@ class TestSyncSA_Reflection:
             engine.dispose()
 
 
-# ── Complex Workflow Tests ────────────────────────────────────────────────
+# Complex Workflow Tests
 
 
 @skip_if_no_valkey

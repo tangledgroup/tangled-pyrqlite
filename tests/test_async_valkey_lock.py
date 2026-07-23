@@ -65,7 +65,7 @@ def cleanup_after_valkey_test():
     _cleanup_test_tables()
 
 
-# ── Unit Tests (no Valkey needed) ───────────────────────────────────────
+# Unit Tests (no Valkey needed)
 
 
 class TestAsyncValkeyLockUnit:
@@ -113,7 +113,7 @@ class TestAsyncValkeyLockUnit:
         assert isinstance(lock, rqlite.AsyncLockProtocol)
 
 
-# ── Integration Tests (Valkey required) ─────────────────────────────────
+# Integration Tests (Valkey required)
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
@@ -167,7 +167,7 @@ class TestAsyncValkeyLockIntegration:
         asyncio.run(_test())
 
 
-# ── Distributed Serialization Tests (Valkey + rqlite required) ──────────
+# Distributed Serialization Tests (Valkey + rqlite required)
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")

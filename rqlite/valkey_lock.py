@@ -40,12 +40,15 @@ if TYPE_CHECKING:
 # Import valkey at module level — requires [valkey] extra
 try:
     import valkey  # noqa: PLC0417
+    from valkey.cluster import ValkeyCluster as _ValkeyCluster  # noqa: PLC0417
     from valkey.lock import Lock as _ValkeyLock  # noqa: PLC0417
 except ImportError as exc:
     raise ImportError(
         "valkey package is required for ValkeyLock. "
         "Install it with: uv add tangled-pyrqlite[valkey]"
     ) from exc
+
+from rqlite.valkey_cluster import create_valkey_client
 
 
 class ValkeyLock:
@@ -84,6 +87,7 @@ class ValkeyLock:
         timeout: float = 10.0,
         lock_timeout: float = -1.0,
         retry_interval: float = 0.05,
+        cluster: bool | None = None,
     ) -> None:
         """Initialize the Valkey distributed lock.
 
@@ -99,6 +103,8 @@ class ValkeyLock:
             lock_timeout: Maximum time to wait for the lock (-1 = wait forever).
                           When reached, acquire() raises TimeoutError.
             retry_interval: Base interval in seconds between acquisition retries.
+            cluster: Force cluster mode (True), standalone mode (False), or
+                     auto-detect (None, default).
 
         Raises:
             ValueError: If timeout <= 0 or name is empty.
@@ -116,26 +122,27 @@ class ValkeyLock:
         self.timeout = timeout
         self.lock_timeout = lock_timeout
         self.retry_interval = retry_interval
+        self.cluster = cluster
 
         # Full Valkey key for this lock
         self._key: str = f"{self.PREFIX}{name}"
 
         # Internal state
         self._acquired = False
-        self._client: valkey.Redis[Any] | None = None
+        self._client: valkey.Redis[Any] | _ValkeyCluster | None = None
         self._client_lock = threading.Lock()
         self._lock: _ValkeyLock | None = None
 
-    def _get_client(self) -> valkey.Redis[Any]:
+    def _get_client(self) -> valkey.Redis[Any] | _ValkeyCluster:
         """Get or create a Valkey client (thread-safe).
 
         Returns:
-            A valkey.Redis client instance.
+            A valkey.Redis or valkey.cluster.ValkeyCluster client instance.
         """
         if self._client is None:
             with self._client_lock:
                 if self._client is None:
-                    self._client = valkey.Redis(
+                    self._client = create_valkey_client(
                         host=self.host,
                         port=self.port,
                         password=self.password,
@@ -143,6 +150,7 @@ class ValkeyLock:
                         decode_responses=True,
                         socket_connect_timeout=5.0,
                         socket_timeout=30.0,
+                        cluster=self.cluster,
                     )
         return self._client
 
@@ -157,7 +165,7 @@ class ValkeyLock:
                 if self._lock is None:
                     # Create client here to avoid deadlock —
                     # _get_client() also acquires _client_lock
-                    client = valkey.Redis(
+                    client = create_valkey_client(
                         host=self.host,
                         port=self.port,
                         password=self.password,
@@ -165,6 +173,7 @@ class ValkeyLock:
                         decode_responses=True,
                         socket_connect_timeout=5.0,
                         socket_timeout=30.0,
+                        cluster=self.cluster,
                     )
                     self._client = client
                     self._lock = _ValkeyLock(
@@ -238,6 +247,15 @@ class ValkeyLock:
         """Enter context manager — acquire the lock."""
         self.acquire()
         return self
+
+    def close(self) -> None:
+        """Close the underlying Valkey client."""
+        if self._client is not None:
+            try:
+                self._client.close()
+            except Exception:
+                pass
+            self._client = None
 
     def __exit__(
         self,

@@ -32,7 +32,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from rqlite import AioValkeyLock
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _has_valkey() -> bool:
@@ -84,7 +84,7 @@ def _get_table_names(conn):
     return insp.get_table_names()
 
 
-# ── ORM Base ───────────────────────────────────────────────────────────────
+# ORM Base
 
 
 class AsyncBase(DeclarativeBase):
@@ -110,7 +110,7 @@ class AsyncProduct(AsyncBase):
     quantity: Mapped[int] = mapped_column(Integer, default=0)
 
 
-# ── Engine Tests ───────────────────────────────────────────────────────────
+# Engine Tests
 
 
 @skip_if_no_valkey
@@ -176,7 +176,7 @@ class TestAsyncSA_Engine:
         run_async(_run())
 
 
-# ── Core Tests ─────────────────────────────────────────────────────────────
+# Core Tests
 
 
 @skip_if_no_valkey
@@ -405,7 +405,7 @@ class TestAsyncSA_Core:
         run_async(_run())
 
 
-# ── ORM Tests ──────────────────────────────────────────────────────────────
+# ORM Tests
 
 
 @skip_if_no_valkey
@@ -700,7 +700,7 @@ class TestAsyncSA_ORM:
         run_async(_run())
 
 
-# ── Reflection Tests ───────────────────────────────────────────────────────
+# Reflection Tests
 
 
 @skip_if_no_valkey
@@ -772,7 +772,7 @@ class TestAsyncSA_Reflection:
         run_async(_run())
 
 
-# ── Complex Workflow Tests ────────────────────────────────────────────────
+# Complex Workflow Tests
 
 
 @skip_if_no_valkey

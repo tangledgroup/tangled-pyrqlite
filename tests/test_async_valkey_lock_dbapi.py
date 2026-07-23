@@ -48,7 +48,7 @@ def run_async(coro):
 skip_if_no_valkey = pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
 
 
-# ── Connection Tests ──────────────────────────────────────────────────────
+# Connection Tests
 
 
 @skip_if_no_valkey
@@ -173,7 +173,7 @@ class TestAsyncValkeyLockConnectionTimeout:
         conn.close()  # ty: ignore[unused-awaitable]
 
 
-# ── Read Consistency Tests ────────────────────────────────────────────────
+# Read Consistency Tests
 
 
 @skip_if_no_valkey
@@ -252,7 +252,7 @@ class TestAsyncValkeyLockReadConsistency:
         conn.close()  # ty: ignore[unused-awaitable]
 
 
-# ── Complex Workflow Tests ────────────────────────────────────────────────
+# Complex Workflow Tests
 
 
 @skip_if_no_valkey
@@ -410,7 +410,7 @@ class TestAsyncValkeyLockComplexWorkflow:
         conn.close()  # ty: ignore[unused-awaitable]
 
 
-# ── Empty Result Set Tests ────────────────────────────────────────────────
+# Empty Result Set Tests
 
 
 @skip_if_no_valkey
@@ -455,7 +455,7 @@ class TestAsyncValkeyLockEmptyResults:
         conn.close()  # ty: ignore[unused-awaitable]
 
 
-# ── Warning Suppression Tests ─────────────────────────────────────────────
+# Warning Suppression Tests
 
 
 @skip_if_no_valkey
@@ -535,7 +535,7 @@ class TestAsyncValkeyLockWarnings:
         conn.close()  # ty: ignore[unused-awaitable]
 
 
-# ── Lock Configuration Tests ──────────────────────────────────────────────
+# Lock Configuration Tests
 
 
 @skip_if_no_valkey

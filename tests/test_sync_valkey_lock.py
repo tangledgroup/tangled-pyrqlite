@@ -65,7 +65,7 @@ def cleanup_after_valkey_test():
     _cleanup_test_tables()
 
 
-# ── Unit Tests (no Valkey needed) ───────────────────────────────────────
+# Unit Tests (no Valkey needed)
 
 
 class TestSyncValkeyLockUnit:
@@ -121,7 +121,7 @@ class TestSyncValkeyLockUnit:
         assert isinstance(lock, rqlite.LockProtocol)
 
 
-# ── Integration Tests (Valkey required) ─────────────────────────────────
+# Integration Tests (Valkey required)
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")
@@ -194,7 +194,7 @@ class TestSyncValkeyLockIntegration:
         lock2.release()
 
 
-# ── Distributed Serialization Tests (Valkey + rqlite required) ──────────
+# Distributed Serialization Tests (Valkey + rqlite required)
 
 
 @pytest.mark.skipif(not _has_valkey(), reason="Valkey not available")

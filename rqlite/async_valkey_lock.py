@@ -47,12 +47,15 @@ if TYPE_CHECKING:
 # Import valkey at module level — requires [valkey] extra
 try:
     import valkey  # noqa: PLC0417
+    from valkey.asyncio.cluster import ValkeyCluster as _AsyncValkeyCluster  # noqa: PLC0417
     from valkey.asyncio.lock import Lock as _AsyncValkeyLock  # noqa: PLC0417
 except ImportError as exc:
     raise ImportError(
         "valkey package is required for AioValkeyLock. "
         "Install it with: uv add tangled-pyrqlite[valkey]"
     ) from exc
+
+from rqlite.async_valkey_cluster import create_valkey_client_async
 
 
 class AioValkeyLock:
@@ -99,6 +102,7 @@ class AioValkeyLock:
         timeout: float = 10.0,
         lock_timeout: float = -1.0,
         retry_interval: float = 0.05,
+        cluster: bool | None = None,
     ) -> None:
         """Initialize the async Valkey distributed lock.
 
@@ -114,6 +118,8 @@ class AioValkeyLock:
             lock_timeout: Maximum time to wait for the lock (-1 = wait forever).
                           When reached, acquire() raises TimeoutError.
             retry_interval: Base interval in seconds between acquisition retries.
+            cluster: Force cluster mode (True), standalone mode (False), or
+                     auto-detect (None, default).
 
         Raises:
             ValueError: If timeout <= 0 or name is empty.
@@ -131,29 +137,34 @@ class AioValkeyLock:
         self.timeout = timeout
         self.lock_timeout = lock_timeout
         self.retry_interval = retry_interval
+        self.cluster = cluster
 
         # Full Valkey key for this lock
         self._key: str = f"{self.PREFIX}{name}"
 
         # Internal state
         self._acquired = False
+        self._client: valkey.asyncio.Valkey[Any] | _AsyncValkeyCluster | None = None
         self._lock: _AsyncValkeyLock | None = None
 
-    async def _get_client(self) -> valkey.asyncio.Valkey[Any]:
+    async def _get_client(self) -> valkey.asyncio.Valkey[Any] | _AsyncValkeyCluster:
         """Create a fresh async Valkey client.
 
         Creates a new client each time to avoid event loop binding issues
         when acquire/release are called in different asyncio.run() contexts.
 
         Returns:
-            A valkey.asyncio.Valkey client instance.
+            A valkey.asyncio.Valkey or valkey.asyncio.cluster.ValkeyCluster client.
         """
-        return valkey.asyncio.from_url(
-            f"redis://{self.host}:{self.port}/{self.db}",
+        return await create_valkey_client_async(
+            host=self.host,
+            port=self.port,
             password=self.password,
+            db=self.db,
             decode_responses=True,
             socket_connect_timeout=5.0,
             socket_timeout=30.0,
+            cluster=self.cluster,
         )
 
     async def _get_valkey_lock(self) -> _AsyncValkeyLock:
@@ -166,6 +177,7 @@ class AioValkeyLock:
         """
         if self._lock is None:
             client = await self._get_client()
+            self._client = client
             self._lock = _AsyncValkeyLock(
                 client,
                 name=self._key,
@@ -238,6 +250,15 @@ class AioValkeyLock:
         """Enter async context manager — acquire the lock."""
         await self.acquire()
         return self
+
+    async def close(self) -> None:
+        """Close the underlying async Valkey client."""
+        if self._client is not None:
+            try:
+                await self._client.aclose()
+            except Exception:
+                pass
+            self._client = None
 
     async def __aexit__(
         self,

@@ -47,12 +47,15 @@ if TYPE_CHECKING:
 # Import redis at module level — requires [redis] extra
 try:
     import redis  # noqa: PLC0417
+    from redis.asyncio.cluster import RedisCluster as _AsyncRedisCluster  # noqa: PLC0417
     from redis.asyncio.lock import Lock as _AsyncRedisLock  # noqa: PLC0417
 except ImportError as exc:
     raise ImportError(
         "redis package is required for AioRedisLock. "
         "Install it with: uv add tangled-pyrqlite[redis]"
     ) from exc
+
+from rqlite.async_redis_cluster import create_redis_client_async
 
 
 class AioRedisLock:
@@ -99,6 +102,7 @@ class AioRedisLock:
         timeout: float = 10.0,
         lock_timeout: float = -1.0,
         retry_interval: float = 0.05,
+        cluster: bool | None = None,
     ) -> None:
         """Initialize the async Redis distributed lock.
 
@@ -114,6 +118,8 @@ class AioRedisLock:
             lock_timeout: Maximum time to wait for the lock (-1 = wait forever).
                           When reached, acquire() raises TimeoutError.
             retry_interval: Base interval in seconds between acquisition retries.
+            cluster: Force cluster mode (True), standalone mode (False), or
+                     auto-detect (None, default).
 
         Raises:
             ValueError: If timeout <= 0 or name is empty.
@@ -131,29 +137,34 @@ class AioRedisLock:
         self.timeout = timeout
         self.lock_timeout = lock_timeout
         self.retry_interval = retry_interval
+        self.cluster = cluster
 
         # Full Redis key for this lock
         self._key: str = f"{self.PREFIX}{name}"
 
         # Internal state
         self._acquired = False
+        self._client: redis.asyncio.Redis[Any] | _AsyncRedisCluster | None = None
         self._lock: _AsyncRedisLock | None = None
 
-    async def _get_client(self) -> redis.asyncio.Redis[Any]:
+    async def _get_client(self) -> redis.asyncio.Redis[Any] | _AsyncRedisCluster:
         """Create a fresh async Redis client.
 
         Creates a new client each time to avoid event loop binding issues
         when acquire/release are called in different asyncio.run() contexts.
 
         Returns:
-            A redis.asyncio.Redis client instance.
+            A redis.asyncio.Redis or redis.asyncio.cluster.RedisCluster client.
         """
-        return redis.asyncio.from_url(
-            f"redis://{self.host}:{self.port}/{self.db}",
+        return await create_redis_client_async(
+            host=self.host,
+            port=self.port,
             password=self.password,
+            db=self.db,
             decode_responses=True,
             socket_connect_timeout=5.0,
             socket_timeout=30.0,
+            cluster=self.cluster,
         )
 
     async def _get_redis_lock(self) -> _AsyncRedisLock:
@@ -166,6 +177,7 @@ class AioRedisLock:
         """
         if self._lock is None:
             client = await self._get_client()
+            self._client = client
             self._lock = _AsyncRedisLock(
                 client,
                 name=self._key,
@@ -238,6 +250,15 @@ class AioRedisLock:
         """Enter async context manager — acquire the lock."""
         await self.acquire()
         return self
+
+    async def close(self) -> None:
+        """Close the underlying async Redis client."""
+        if self._client is not None:
+            try:
+                await self._client.aclose()
+            except Exception:
+                pass
+            self._client = None
 
     async def __aexit__(
         self,

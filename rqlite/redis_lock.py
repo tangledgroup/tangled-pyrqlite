@@ -40,12 +40,15 @@ if TYPE_CHECKING:
 # Import redis at module level — requires [redis] extra
 try:
     import redis  # noqa: PLC0417
+    from redis.cluster import RedisCluster as _RedisCluster  # noqa: PLC0417
     from redis.lock import Lock as _RedisLock  # noqa: PLC0417
 except ImportError as exc:
     raise ImportError(
         "redis package is required for RedisLock. "
         "Install it with: uv add tangled-pyrqlite[redis]"
     ) from exc
+
+from rqlite.redis_cluster import create_redis_client
 
 
 class RedisLock:
@@ -84,6 +87,7 @@ class RedisLock:
         timeout: float = 10.0,
         lock_timeout: float = -1.0,
         retry_interval: float = 0.05,
+        cluster: bool | None = None,
     ) -> None:
         """Initialize the Redis distributed lock.
 
@@ -99,6 +103,8 @@ class RedisLock:
             lock_timeout: Maximum time to wait for the lock (-1 = wait forever).
                           When reached, acquire() raises TimeoutError.
             retry_interval: Base interval in seconds between acquisition retries.
+            cluster: Force cluster mode (True), standalone mode (False), or
+                     auto-detect (None, default).
 
         Raises:
             ValueError: If timeout <= 0 or name is empty.
@@ -116,26 +122,27 @@ class RedisLock:
         self.timeout = timeout
         self.lock_timeout = lock_timeout
         self.retry_interval = retry_interval
+        self.cluster = cluster
 
         # Full Redis key for this lock
         self._key: str = f"{self.PREFIX}{name}"
 
         # Internal state
         self._acquired = False
-        self._client: redis.Redis[Any] | None = None
+        self._client: redis.Redis[Any] | _RedisCluster | None = None
         self._client_lock = threading.Lock()
         self._lock: _RedisLock | None = None
 
-    def _get_client(self) -> redis.Redis[Any]:
+    def _get_client(self) -> redis.Redis[Any] | _RedisCluster:
         """Get or create a Redis client (thread-safe).
 
         Returns:
-            A redis.Redis client instance.
+            A redis.Redis or redis.cluster.RedisCluster client instance.
         """
         if self._client is None:
             with self._client_lock:
                 if self._client is None:
-                    self._client = redis.Redis(
+                    self._client = create_redis_client(
                         host=self.host,
                         port=self.port,
                         password=self.password,
@@ -143,6 +150,7 @@ class RedisLock:
                         decode_responses=True,
                         socket_connect_timeout=5.0,
                         socket_timeout=30.0,
+                        cluster=self.cluster,
                     )
         return self._client
 
@@ -157,7 +165,7 @@ class RedisLock:
                 if self._lock is None:
                     # Create client here to avoid deadlock —
                     # _get_client() also acquires _client_lock
-                    client = redis.Redis(
+                    client = create_redis_client(
                         host=self.host,
                         port=self.port,
                         password=self.password,
@@ -165,6 +173,7 @@ class RedisLock:
                         decode_responses=True,
                         socket_connect_timeout=5.0,
                         socket_timeout=30.0,
+                        cluster=self.cluster,
                     )
                     self._client = client
                     self._lock = _RedisLock(
@@ -238,6 +247,15 @@ class RedisLock:
         """Enter context manager — acquire the lock."""
         self.acquire()
         return self
+
+    def close(self) -> None:
+        """Close the underlying Redis client."""
+        if self._client is not None:
+            try:
+                self._client.close()
+            except Exception:
+                pass
+            self._client = None
 
     def __exit__(
         self,

@@ -26,7 +26,7 @@ from rqlite.exceptions import (
     ProgrammingError,
 )
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _has_valkey() -> bool:
@@ -75,7 +75,7 @@ def _teardown_table(cursor: rqlite.Cursor) -> None:
     cursor.connection.commit()
 
 
-# ── Connection Tests ───────────────────────────────────────────────────────
+# Connection Tests
 
 
 @skip_if_no_valkey
@@ -185,7 +185,7 @@ class TestSyncDBAPI_Connection:
         assert len(tx_warnings) >= 1
 
 
-# ── Cursor Tests ───────────────────────────────────────────────────────────
+# Cursor Tests
 
 
 @skip_if_no_valkey
@@ -258,7 +258,7 @@ class TestSyncDBAPI_Cursor:
         conn.close()
 
 
-# ── CRUD Tests ─────────────────────────────────────────────────────────────
+# CRUD Tests
 
 
 @skip_if_no_valkey
@@ -395,7 +395,7 @@ class TestSyncDBAPI_CRUD:
         conn.close()
 
 
-# ── Fetch Tests ────────────────────────────────────────────────────────────
+# Fetch Tests
 
 
 @skip_if_no_valkey
@@ -480,7 +480,7 @@ class TestSyncDBAPI_Fetch:
         conn.close()
 
 
-# ── Cursor Attributes Tests ────────────────────────────────────────────────
+# Cursor Attributes Tests
 
 
 @skip_if_no_valkey
@@ -538,7 +538,7 @@ class TestSyncDBAPI_CursorAttrs:
         conn.close()
 
 
-# ── Type Handling Tests ────────────────────────────────────────────────────
+# Type Handling Tests
 
 
 @skip_if_no_valkey
@@ -656,7 +656,7 @@ class TestSyncDBAPI_Types:
         conn.close()
 
 
-# ── Error Handling Tests ───────────────────────────────────────────────────
+# Error Handling Tests
 
 
 @skip_if_no_valkey
@@ -709,7 +709,7 @@ class TestSyncDBAPI_Errors:
         conn.close()
 
 
-# ── Transaction SQL Warning Tests ──────────────────────────────────────────
+# Transaction SQL Warning Tests
 
 
 @skip_if_no_valkey
@@ -757,7 +757,7 @@ class TestSyncDBAPI_TransactionWarnings:
         conn.close()
 
 
-# ── Read Consistency Tests ────────────────────────────────────────────────
+# Read Consistency Tests
 
 
 @skip_if_no_valkey
@@ -803,7 +803,7 @@ class TestSyncDBAPI_ReadConsistency:
         conn.close()
 
 
-# ── Complex Workflow Tests ────────────────────────────────────────────────
+# Complex Workflow Tests
 
 
 @skip_if_no_valkey

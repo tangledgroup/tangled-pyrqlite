@@ -27,7 +27,7 @@ from rqlite.exceptions import (
     ProgrammingError,
 )
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _has_valkey() -> bool:
@@ -76,7 +76,7 @@ async def _teardown_table(cursor: rqlite.AsyncCursor) -> None:
     await cursor.connection.commit()
 
 
-# ── Connection Tests ───────────────────────────────────────────────────────
+# Connection Tests
 
 
 @skip_if_no_valkey
@@ -226,7 +226,7 @@ class TestAsyncDBAPI_Connection:
         asyncio.run(_run())
 
 
-# ── Cursor Tests ───────────────────────────────────────────────────────────
+# Cursor Tests
 
 
 @skip_if_no_valkey
@@ -325,7 +325,7 @@ class TestAsyncDBAPI_Cursor:
         asyncio.run(_run())
 
 
-# ── CRUD Tests ─────────────────────────────────────────────────────────────
+# CRUD Tests
 
 
 @skip_if_no_valkey
@@ -505,7 +505,7 @@ class TestAsyncDBAPI_CRUD:
         asyncio.run(_run())
 
 
-# ── Fetch Tests ────────────────────────────────────────────────────────────
+# Fetch Tests
 
 
 @skip_if_no_valkey
@@ -614,7 +614,7 @@ class TestAsyncDBAPI_Fetch:
         asyncio.run(_run())
 
 
-# ── Cursor Attributes Tests ────────────────────────────────────────────────
+# Cursor Attributes Tests
 
 
 @skip_if_no_valkey
@@ -684,7 +684,7 @@ class TestAsyncDBAPI_CursorAttrs:
         asyncio.run(_run())
 
 
-# ── Type Handling Tests ────────────────────────────────────────────────────
+# Type Handling Tests
 
 
 @skip_if_no_valkey
@@ -803,7 +803,7 @@ class TestAsyncDBAPI_Types:
         asyncio.run(_run())
 
 
-# ── Error Handling Tests ───────────────────────────────────────────────────
+# Error Handling Tests
 
 
 @skip_if_no_valkey
@@ -859,7 +859,7 @@ class TestAsyncDBAPI_Errors:
         asyncio.run(_run())
 
 
-# ── Transaction SQL Warning Tests ──────────────────────────────────────────
+# Transaction SQL Warning Tests
 
 
 @skip_if_no_valkey
@@ -916,7 +916,7 @@ class TestAsyncDBAPI_TransactionWarnings:
         asyncio.run(_run())
 
 
-# ── Read Consistency Tests ────────────────────────────────────────────────
+# Read Consistency Tests
 
 
 @skip_if_no_valkey
@@ -966,7 +966,7 @@ class TestAsyncDBAPI_ReadConsistency:
         asyncio.run(_run())
 
 
-# ── Complex Workflow Tests ────────────────────────────────────────────────
+# Complex Workflow Tests
 
 
 @skip_if_no_valkey
