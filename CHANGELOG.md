@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.8 - 2026-07-24
+
+### Added
+
+- **Redis/Valkey cluster support** — four new cluster client factory modules (`redis_cluster.py`, `async_redis_cluster.py`, `valkey_cluster.py`, `async_valkey_cluster.py`) that auto-detect cluster mode via `INFO cluster` and return the appropriate client type (`Redis`/`RedisCluster`, `Valkey`/`ValkeyCluster`).
+- **`cluster` parameter on distributed locks** — `RedisLock`, `AioRedisLock`, `ValkeyLock`, `AioValkeyLock` now accept `cluster: bool | None` (True = force cluster, False = force standalone, None = auto-detect). Client creation delegated to the cluster factory helpers.
+- **`close()` method on all lock classes** — properly shuts down the underlying Redis/Valkey client to avoid resource leaks.
+- **Cluster-backed DB-API test suites** — `test_dbapi_sync_redis_cluster.py`, `test_dbapi_async_redis_cluster.py`, `test_dbapi_sync_valkey_cluster.py`, `test_dbapi_async_valkey_cluster.py`.
+- **Cluster-backed SQLAlchemy test suites** — `test_sqlalchemy_sync_redis_cluster.py`, `test_sqlalchemy_async_redis_cluster.py`, `test_sqlalchemy_sync_valkey_cluster.py`, `test_sqlalchemy_async_valkey_cluster.py`.
+- **Comprehensive Valkey lock test suites** — full coverage for all lock mode combinations (sync/async, thread lock, aio lock, redis lock, valkey lock) across DB-API and SQLAlchemy interfaces.
+
+### Changed
+
+- **Lock client lifecycle** — `_get_client()` in all four lock classes now uses cluster factory helpers instead of inline constructors; client reference stored on `self._client` for lifecycle management.
+- **Type annotations** — lock classes now include `RedisCluster`/`ValkeyCluster` union types for `_client` and `_get_client()` return types.
+- **Test fixtures** — `conftest.py` expanded with 24 new table names for cluster-backed SQLAlchemy and DB-API tests.
+
 ## v0.1.7 - 2026-06-10
 
 ### Added
